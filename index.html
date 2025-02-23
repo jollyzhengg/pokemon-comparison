@@ -102,7 +102,7 @@
 
 
         <div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-            <input type="text" id="pokemon-input" placeholder="Type Pokémon name..." autocomplete="off" oninput="findSuggestions('pokemon-input', 'suggestions')" />
+            <input type="text" id="pokemon-input" placeholder="Type Pokémon name..." autocomplete="off" />
             <img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Delete" 
                  style="cursor: pointer; width: 20px; height: 20px;" />
             <div id="suggestions" class="suggestions"></div>
@@ -330,15 +330,10 @@ d3.select("#delete-button").on("click", function() {
     const header = d3.select("#pokemon-header");
     header.html(`${selectedPokemon.pokedex_number} - ${selectedPokemon.name}`);
 
-    console.log(selectedPokemon.height_m);
-
 
     // If height or weight is missing, show "Unknown"
     const height = selectedPokemon.height_m ? `${selectedPokemon.height_m} m` : "Unknown";
     const weight = selectedPokemon.weight_kg ? `${selectedPokemon.weight_kg} kg` : "Unknown";
-
-    console.log(height)
-    console.log(height)
 
     // Function to convert type text into image elements
     function getTypeImages(typeString) {
