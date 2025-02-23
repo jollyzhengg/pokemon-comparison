@@ -119,6 +119,7 @@
 
 
 
+
 		<!-- Pokémon container with sections for name, image, description, and radar chart -->
 		<!-- Pokémon container with sections for name, image, description, and radar chart -->
 		<div id="pokemon-container" class="pokemon-container">
@@ -133,15 +134,122 @@
 			<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
 		</div>
 
+		<!-- SCATTER -->
+		<div class="scatter-section">
+			<svg id="scatter" class="scatter-chart"> </svg>
 
-		<!-- Radar Chart -->
+			<div class="scatter-choices">
+				<label for="x-select">X-Axis:</label>
+				<select id="x-select">
+					<option value="hp">HP</option>
+					<option value="attack">Attack</option>
+					<option value="defense">Defense</option>
+					<option value="sp_attack">Sp. Attack</option>
+					<option value="sp_defense">Sp. Defense</option>
+				</select>
+
+				<label for="y-select">Y-Axis:</label>
+				<select id="y-select">
+					<option value="attack">Attack</option>
+					<option value="hp">HP</option>
+					<option value="defense">Defense</option>
+					<option value="sp_attack">Sp. Attack</option>
+					<option value="sp_defense">Sp. Defense</option>
+				</select>
+			</div>
+
+		</div>
+
 		<svg id="spider-chart" class="spider-chart"></svg>
 		<svg id="bar-chart"></svg>
 
 	</div>
 
 	<script>
+
+
+		// pokedex entry is initially empty
 		let pokemonData = [];
+
+		/////// SCATTER PLOT
+		async function generateScatter() {
+			const scatter = d3.select("svg#scatterplot");
+			const width = scatter.attr("width");
+			const height = scatter.attr("height");
+			const margin = { top: 15, right: 15, bottom: 40, left: 50 };
+			const chartWidth = width - margin.left - margin.right;
+			const chartHeight = height - margin.top - margin.bottom;
+
+			let annotations = scatter.append("g").attr("id", "annotations");
+			let chartArea = scatter.append("g").attr("id", "points")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype)
+			const xSelect = d3.select("#x-select");
+			const ySelect = d3.select("#y-select");
+
+			function updateScatter() {
+				const xValue = xSelect.property("value");
+				const yValue = ySelect.property("value");
+
+				// RESET
+				chartArea.selectAll("*").remove();
+				annotations.selectAll("*").remove();
+
+				const xScale = d3.scaleLinear()
+					.domain(d3.extent(dat, d => d[xValue])).nice()
+					.range([0, chartWidth]);
+
+				const yScale = d3.scaleLinear()
+					.domain(d3.extent(dat, d => d[yValue])).nice()
+					.range([chartHeight, 0]);
+
+				const xAxis = d3.axisBottom(xScale);
+				const yAxis = d3.axisLeft(yScale);
+
+				annotations.append("g")
+					.attr("transform", `translate(${margin.left}, ${chartHeight + margin.top})`)
+					.call(xAxis)
+					.append("text")
+					.attr("x", chartWidth / 2)
+					.attr("y", 35)
+					.attr("fill", "black")
+					.attr("font-size", "12px")
+					.attr("text-anchor", "middle")
+					.text(xValue);
+
+				annotations.append("g")
+					.attr("transform", `translate(${margin.left}, ${margin.top})`)
+					.call(yAxis)
+					.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("x", -chartHeight / 2)
+					.attr("y", -35)
+					.attr("fill", "black")
+					.attr("font-size", "12px")
+					.attr("text-anchor", "middle")
+					.text(yValue);
+
+				// draw circles
+				chartArea.selectAll("circle")
+					.data(dat)
+					.join("circle")
+					.attr("cx", d => xScale(d[xValue]))
+					.attr("cy", d => yScale(d[yValue]))
+					.attr("r", 4)
+					.attr("fill", "steelblue")
+					.attr("opacity", 0.7);
+			}
+
+			updateScatter();
+			xSelect.on("change", updateScatter);
+			ySelect.on("change", updateScatter);
+		}
+
+		// scatter is always displayed on default
+		generateScatter();
+
+
 		function generateBarChart(pokemon1, pokemon2) {
 			const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon1.toLowerCase());
 			const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon2.toLowerCase());
@@ -304,7 +412,7 @@
 
 			input.on("input", function () {
 				const value = this.value.toLowerCase();
-				suggestions.html(""); // Clear previous suggestions
+				suggestions.html("");
 
 				if (value) {
 					const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
@@ -314,10 +422,10 @@
 							.text(name)
 							.on("click", function () {
 								input.property("value", name);
-								suggestions.html(""); // Clear suggestions on selection
-								loadPokemonImage(name); // Load the Pokémon image
-								generateSpiderChart(name); // Generate the spider chart
-								displayPokemonInfo(name); // Display Pokémon info
+								suggestions.html("");
+								loadPokemonImage(name);
+								generateSpiderChart(name);
+								displayPokemonInfo(name);
 
 							});
 					});
@@ -329,21 +437,20 @@
 		// Add the event listener for the delete button
 		// Add the event listener for the delete button
 		d3.select("#delete-button").on("click", function () {
-			// Reset the Pokémon input
-			d3.select("#pokemon-input").property("value", "");
 
-			// Reset Pokémon container with default message
+			// RESET
+			d3.select("#pokemon-input").property("value", "");
 			d3.select("#pokemon-header").html("Enter a Pokémon name to see details");
 			d3.select("#pokemon-image").style("display", "none");
 			d3.select("#pokemon-description").html("Start by typing a Pokémon name above.");
 
-			// Clear the spider chart
+			// CLEAR SPIDER
 			d3.select("#spider-chart").selectAll("*").remove();
 		});
 
 
 
-		// Function to load Pokémon image
+		//////////// POKEMON IMAQGE
 		function loadPokemonImage(name) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
@@ -357,7 +464,7 @@
 			}
 		}
 
-		// Function to generate the spider chart
+		/////// SPIDER CHART
 		function generateSpiderChart(name) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
@@ -458,13 +565,12 @@
 							.style("top", (event.pageY - 28) + "px");
 					})
 					.on("mouseout", function () {
-						// Hide tooltip
 						d3.select("#tooltip")
-							.style("visibility", "hidden");
+							.style("visibility", "hidden"); // hide tooltip
 					});
 			});
 
-			// Create the tooltip
+			// tool tip
 			const tooltip = d3.select("body").append("div")
 				.attr("id", "tooltip")
 				.style("position", "absolute")
