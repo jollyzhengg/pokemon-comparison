@@ -58,47 +58,171 @@
 
     <script>
         let pokemonData = [];
-
-// Load Pokémon names and numbers from CSV and set up autocomplete
-d3.csv("post-process-data/pokemon_dataset.csv").then(function(data) {
-    pokemonData = data; // Store the entire dataset for later use
-    const pokemonNames = data.map(d => d.name);
-
-    const input = d3.select("#pokemon-input");
-    const suggestions = d3.select("#suggestions");
-
-    input.on("input", function() {
-        const value = this.value.toLowerCase();
-        suggestions.html(""); // Clear previous suggestions
-
-        if (value) {
-          const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
-          filteredNames.forEach(name => {
-                suggestions.append("div")
-                    .attr("class", "suggestion-item")
-                    .text(name)
-                    .on("click", function() {
-                        input.property("value", name);
-                        suggestions.html(""); // Clear suggestions on selection
-                        loadPokemonImage(name); // Load the Pokémon image
-                    });
-            });
-        }
+    
+    // Load Pokémon names and numbers from CSV and set up autocomplete
+    d3.csv("post-process-data/pokemon_dataset.csv").then(function(data) {
+        pokemonData = data; // Store the entire dataset for later use
+        const pokemonNames = data.map(d => d.name);
+    
+        const input = d3.select("#pokemon-input");
+        const suggestions = d3.select("#suggestions");
+    
+        input.on("input", function() {
+            const value = this.value.toLowerCase();
+            suggestions.html(""); // Clear previous suggestions
+    
+            if (value) {
+                const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
+                filteredNames.forEach(name => {
+                    suggestions.append("div")
+                        .attr("class", "suggestion-item")
+                        .text(name)
+                        .on("click", function() {
+                            input.property("value", name);
+                            suggestions.html(""); // Clear suggestions on selection
+                            loadPokemonImage(name); // Load the Pokémon image
+                            generateSpiderChart(name); // Generate the spider chart
+                        });
+                });
+            }
+        });
     });
-});
-
-function loadPokemonImage(name) {
-    const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
-
-    if (selectedPokemon) {
-        const pokedexNumber = selectedPokemon.pokedex_number;
-        const imageUrl = `post-process-data/pokemon_jpg/${pokedexNumber}.png`;
-        const image = d3.select("#pokemon-image");
-        image.attr("src", imageUrl).style("display", "block");
-    } else {
-        console.error("Pokémon not found");
+    
+    function loadPokemonImage(name) {
+        const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
+    
+        if (selectedPokemon) {
+            const pokedexNumber = selectedPokemon.pokedex_number;
+            const imageUrl = `post-process-data/pokemon_jpg/${pokedexNumber}.png`;
+            const image = d3.select("#pokemon-image");
+            image.attr("src", imageUrl).style("display", "block");
+        } else {
+            console.error("Pokémon not found");
+        }
     }
-}
+
+    function generateSpiderChart(name) {
+        const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
+
+        if (!selectedPokemon) {
+            console.error("Pokémon not found for spider chart.");
+            return;
+        }
+
+        const stats = [
+            { axis: "HP", value: +selectedPokemon.hp },
+            { axis: "Attack", value: +selectedPokemon.attack },
+            { axis: "Defense", value: +selectedPokemon.defense },
+            { axis: "Sp. Attack", value: +selectedPokemon.sp_attack },
+            { axis: "Sp. Defense", value: +selectedPokemon.sp_defense },
+            { axis: "Speed", value: +selectedPokemon.speed }
+        ];
+
+        // Remove previous spider chart
+        d3.select("#spider-chart").selectAll("*").remove();
+
+        const width = 400;
+        const height = 400;
+        const maxValue = d3.max(stats, d => d.value);
+        const angleSlice = (Math.PI * 2) / stats.length;
+
+        // Create the SVG for the spider chart
+        const svg = d3.select("#spider-chart")
+            .attr("width", width)
+            .attr("height", height)
+            .style("background-color", "#f5f5dc"); // Set cream white background
+
+        // Create the radial lines
+        const radialLine = d3.lineRadial()
+            .angle((d, i) => i * angleSlice)
+            .radius(d => (d.value / maxValue) * (width / 2 - 40));
+
+        const radarData = stats.concat(stats[0]); // Close the loop for the radar chart
+
+        svg.append("path")
+            .datum(radarData)
+            .attr("d", radialLine)
+            .attr("fill", "rgba(0, 150, 255, 0.5)")
+            .attr("stroke", "#00A6D6")
+            .attr("stroke-width", 2)
+            .attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+        // Add axes and dashes
+        const dashCount = 5; // Number of dashes
+        for (let j = 1; j <= dashCount; j++) {
+            const radius = (j / dashCount) * (width / 2 - 40);
+            svg.append("circle")
+                .attr("cx", width / 2)
+                .attr("cy", height / 2)
+                .attr("r", radius)
+                .attr("fill", "none")
+                .attr("stroke", "#ccc")
+                .attr("stroke-dasharray", "4, 2"); // Dashes for circles
+
+        }
+
+        // Add axes and labels
+        stats.forEach((d, i) => {
+            const angle = angleSlice * i;
+            svg.append("line")
+                .attr("x1", width / 2)
+                .attr("y1", height / 2)
+                .attr("x2", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 40)))
+                .attr("y2", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 40)))
+                .attr("stroke", "#ccc");
+
+            svg.append("text")
+                .attr("x", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 30)))
+                .attr("y", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 30)))
+                .text(d.axis)
+                .attr("font-size", "12px")
+                .attr("text-anchor", "middle");
+
+            // Add points to the edges
+            const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxValue) * (width / 2 - 40));
+            const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxValue) * (height / 2 - 40));
+
+            // Add interactivity (hover effects)
+            svg.append("circle")
+                .attr("cx", pointX)
+                .attr("cy", pointY)
+                .attr("r", 5)
+                .attr("fill", "#00A6D6")
+                .on("mouseover", function(event) {
+                    // Show tooltip
+                    d3.select("#tooltip")
+                        .style("visibility", "visible")
+                        .html(`${d.axis}: ${d.value}`)
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mousemove", function(event) {
+                    // Move the tooltip with the mouse
+                    d3.select("#tooltip")
+                        .style("left", (event.pageX + 5) + "px")
+                        .style("top", (event.pageY - 28) + "px");
+                })
+                .on("mouseout", function() {
+                    // Hide tooltip
+                    d3.select("#tooltip")
+                        .style("visibility", "hidden");
+                });
+        });
+
+        // Create the tooltip
+        const tooltip = d3.select("body").append("div")
+            .attr("id", "tooltip")
+            .style("position", "absolute")
+            .style("visibility", "hidden")
+            .style("background-color", "#fff")
+            .style("padding", "5px")
+            .style("border-radius", "3px")
+            .style("box-shadow", "0px 0px 10px rgba(0, 0, 0, 0.1)")
+            .style("font-size", "12px")
+            .style("color", "#333");
+    }
+
     </script>
+    
 </body>
 </html>
