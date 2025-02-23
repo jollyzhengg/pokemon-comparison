@@ -104,10 +104,9 @@
 </head>
 
 <body>
-	<h1>Pokémon Comparison Tool</h1>
+	<h1>Poké-Compare</h1>
 
 	<div class="section">
-
 
 		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
 			<input type="text" id="pokemon-input" placeholder="Type Pokémon name..." autocomplete="off">
@@ -136,7 +135,7 @@
 
 		<!-- SCATTER -->
 		<div class="scatter-section">
-			<svg id="scatter" class="scatter-chart"> </svg>
+			<svg id="scatter" class="scatter-chart" width="500" height="400"></svg>
 
 			<div class="scatter-choices">
 				<label for="x-select">X-Axis:</label>
@@ -158,6 +157,9 @@
 				</select>
 			</div>
 
+			<!-- display information of pokemon -->
+			<svg id="pokemon-panel" width="250" height="300"></svg>
+
 		</div>
 
 		<svg id="spider-chart" class="spider-chart"></svg>
@@ -173,7 +175,7 @@
 
 		/////// SCATTER PLOT
 		async function generateScatter() {
-			const scatter = d3.select("svg#scatterplot");
+			const scatter = d3.select("svg#scatter");
 			const width = scatter.attr("width");
 			const height = scatter.attr("height");
 			const margin = { top: 15, right: 15, bottom: 40, left: 50 };
@@ -184,53 +186,73 @@
 			let chartArea = scatter.append("g").attr("id", "points")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype)
+			const getNiceExtent = (data, key) => d3.extent(data, d => d[key]);
+			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype);
 			const xSelect = d3.select("#x-select");
 			const ySelect = d3.select("#y-select");
+
+			// PANEL SELECTION
+			const panelSvg = d3.select("#pokemon-panel");
+			function updatePanel(row) {
+				panelSvg.selectAll("*").remove();
+
+				let entries = Object.entries(row);
+
+				panelSvg.append("text")
+					.attr("x", 10)
+					.attr("y", 20)
+					.attr("font-size", "16px")
+					.attr("font-weight", "bold")
+					.text(row.name || "Pokémon Details");
+
+				entries.forEach(([key, value], i) => {
+					if (key !== "name") {
+						panelSvg.append("text")
+							.attr("x", 10)
+							.attr("y", 40 + i * 20)
+							.attr("font-size", "12px")
+							.text(`${key}: ${value}`);
+					}
+				});
+			}
 
 			function updateScatter() {
 				const xValue = xSelect.property("value");
 				const yValue = ySelect.property("value");
 
-				// RESET
+				// reset
 				chartArea.selectAll("*").remove();
 				annotations.selectAll("*").remove();
 
 				const xScale = d3.scaleLinear()
-					.domain(d3.extent(dat, d => d[xValue])).nice()
+					.domain(getNiceExtent(dat, xValue)).nice()
 					.range([0, chartWidth]);
 
 				const yScale = d3.scaleLinear()
-					.domain(d3.extent(dat, d => d[yValue])).nice()
+					.domain(getNiceExtent(dat, yValue)).nice()
 					.range([chartHeight, 0]);
 
-				const xAxis = d3.axisBottom(xScale);
-				const yAxis = d3.axisLeft(yScale);
-
 				annotations.append("g")
-					.attr("transform", `translate(${margin.left}, ${chartHeight + margin.top})`)
-					.call(xAxis)
+					.attr("transform", `translate(${margin.left},${chartHeight + margin.top})`)
+					.call(d3.axisBottom(xScale))
 					.append("text")
 					.attr("x", chartWidth / 2)
 					.attr("y", 35)
 					.attr("fill", "black")
-					.attr("font-size", "12px")
 					.attr("text-anchor", "middle")
 					.text(xValue);
 
 				annotations.append("g")
-					.attr("transform", `translate(${margin.left}, ${margin.top})`)
-					.call(yAxis)
+					.attr("transform", `translate(${margin.left},${margin.top})`)
+					.call(d3.axisLeft(yScale))
 					.append("text")
 					.attr("transform", "rotate(-90)")
 					.attr("x", -chartHeight / 2)
 					.attr("y", -35)
 					.attr("fill", "black")
-					.attr("font-size", "12px")
 					.attr("text-anchor", "middle")
 					.text(yValue);
 
-				// draw circles
 				chartArea.selectAll("circle")
 					.data(dat)
 					.join("circle")
@@ -238,12 +260,16 @@
 					.attr("cy", d => yScale(d[yValue]))
 					.attr("r", 4)
 					.attr("fill", "steelblue")
-					.attr("opacity", 0.7);
+					.attr("opacity", 0.7)
+					.on("click", (event, d) => updatePanel(d));
+
 			}
 
 			updateScatter();
 			xSelect.on("change", updateScatter);
 			ySelect.on("change", updateScatter);
+
+
 		}
 
 		// scatter is always displayed on default
