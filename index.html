@@ -17,7 +17,7 @@
         }
         .pokemon-selection {
             margin-bottom: 20px;
-            position: relative; /* Added for suggestions dropdown positioning */
+            position: relative;
         }
         .suggestions {
             border: 1px solid #ccc;
@@ -26,7 +26,7 @@
             overflow-y: auto;
             position: absolute;
             z-index: 1;
-            width: 100%; /* Match width of the input */
+            width: 100%;
         }
         .suggestion-item {
             padding: 5px;
@@ -34,6 +34,51 @@
         }
         .suggestion-item:hover {
             background-color: #f0f0f0;
+        }
+        .pokemon-container {
+            width: 400px;
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .pokemon-image {
+            width: 80%;
+            max-width: 300px;
+            height: auto;
+            background-color: #F8C8DC;
+            padding: 10px;
+            border-radius: 5px;
+            display: block;
+            margin-bottom: 10px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .pokemon-header {
+            font-size: 18px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            background-color: #A6D8FF;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .pokemon-description {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+            background-color: #FFD9B3;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .pokemon-description div {
+            margin-bottom: 5px;
         }
         .spider-chart {
             margin-top: 20px;
@@ -52,56 +97,72 @@
             <input type="text" id="pokemon-input" placeholder="Type Pokémon name..." autocomplete="off" oninput="findSuggestions('pokemon-input', 'suggestions')" />
             <div id="suggestions" class="suggestions"></div>
         </div>
-        <img id="pokemon-image" src="" alt="Pokémon Image" style="display: none;" />
+
+        <!-- Pokémon container with sections for name, image, description, and radar chart -->
+        <div id="pokemon-container" class="pokemon-container" style="display: none;">
+            <!-- Pokémon Header -->
+            <div id="pokemon-header" class="pokemon-header"></div>
+            
+            <!-- Pokémon Image -->
+            <img id="pokemon-image" class="pokemon-image" src="" alt="Pokémon Image" style="display: none;" />
+            
+            <!-- Pokémon Description -->
+            <div id="pokemon-description" class="pokemon-description" style="display: none;"></div>
+        </div>
+
+        <!-- Radar Chart -->
         <svg id="spider-chart" class="spider-chart"></svg>
     </div>
 
     <script>
         let pokemonData = [];
     
-    // Load Pokémon names and numbers from CSV and set up autocomplete
-    d3.csv("post-process-data/pokemon_dataset.csv").then(function(data) {
-        pokemonData = data; // Store the entire dataset for later use
-        const pokemonNames = data.map(d => d.name);
+        // Load Pokémon names and numbers from CSV and set up autocomplete
+        d3.csv("post-process-data/pokemon_dataset.csv").then(function(data) {
+            pokemonData = data;
+            const pokemonNames = data.map(d => d.name);
     
-        const input = d3.select("#pokemon-input");
-        const suggestions = d3.select("#suggestions");
+            const input = d3.select("#pokemon-input");
+            const suggestions = d3.select("#suggestions");
     
-        input.on("input", function() {
-            const value = this.value.toLowerCase();
-            suggestions.html(""); // Clear previous suggestions
+            input.on("input", function() {
+                const value = this.value.toLowerCase();
+                suggestions.html(""); // Clear previous suggestions
     
-            if (value) {
-                const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
-                filteredNames.forEach(name => {
-                    suggestions.append("div")
-                        .attr("class", "suggestion-item")
-                        .text(name)
-                        .on("click", function() {
-                            input.property("value", name);
-                            suggestions.html(""); // Clear suggestions on selection
-                            loadPokemonImage(name); // Load the Pokémon image
-                            generateSpiderChart(name); // Generate the spider chart
-                        });
-                });
-            }
+                if (value) {
+                    const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
+                    filteredNames.forEach(name => {
+                        suggestions.append("div")
+                            .attr("class", "suggestion-item")
+                            .text(name)
+                            .on("click", function() {
+                                input.property("value", name);
+                                suggestions.html(""); // Clear suggestions on selection
+                                loadPokemonImage(name); // Load the Pokémon image
+                                generateSpiderChart(name); // Generate the spider chart
+                                displayPokemonInfo(name); // Display Pokémon info
+                            });
+                    });
+                }
+            });
         });
-    });
-    
-    function loadPokemonImage(name) {
-        const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
-    
-        if (selectedPokemon) {
-            const pokedexNumber = selectedPokemon.pokedex_number;
-            const imageUrl = `post-process-data/pokemon_jpg/${pokedexNumber}.png`;
-            const image = d3.select("#pokemon-image");
-            image.attr("src", imageUrl).style("display", "block");
-        } else {
-            console.error("Pokémon not found");
-        }
-    }
 
-    function generateSpiderChart(name) {
+        // Function to load Pokémon image
+        function loadPokemonImage(name) {
+            const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
+    
+            if (selectedPokemon) {
+                const pokedexNumber = selectedPokemon.pokedex_number;
+                const imageUrl = `post-process-data/pokemon_jpg/${pokedexNumber}.png`;
+                const image = d3.select("#pokemon-image");
+                image.attr("src", imageUrl).style("display", "block");
+            } else {
+                console.error("Pokémon not found");
+            }
+        }
+
+        // Function to generate the spider chart
+        function generateSpiderChart(name) {
         const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
         if (!selectedPokemon) {
@@ -221,8 +282,37 @@
             .style("font-size", "12px")
             .style("color", "#333");
     }
+        // Function to display Pokémon info
+        function displayPokemonInfo(name) {
+            const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
+            if (!selectedPokemon) {
+                console.error("Pokémon data not found for description.");
+                return;
+            }
+
+            // Show the Pokémon container
+            const container = d3.select("#pokemon-container").style("display", "block");
+
+            // Header: Pokémon name and Pokedex number
+            const header = d3.select("#pokemon-header");
+            header.html(`${selectedPokemon.pokedex_number} - ${selectedPokemon.name}`);
+
+            // If height or weight is missing, show "Unknown"
+            const height = selectedPokemon.height ? `${selectedPokemon.height}` : "Unknown";
+            const weight = selectedPokemon.weight ? `${selectedPokemon.weight}` : "Unknown";
+
+            // Description Box
+            const description = d3.select("#pokemon-description").style("display", "block");
+            description.html(`
+                <div><strong>Classification:</strong> ${selectedPokemon.classfication}</div>
+                <div><strong>Type(s):</strong> ${selectedPokemon.type1} ${selectedPokemon.type2 ? selectedPokemon.type2 : ''}</div>
+                <div><strong>Height:</strong> ${height}</div>
+                <div><strong>Weight:</strong> ${weight}</div>
+                <div><strong>Effective:</strong> ${selectedPokemon.effective}</div>
+                <div><strong>Not Effective:</strong> ${selectedPokemon.not_effective}</div>
+            `);
+        }
     </script>
-    
 </body>
 </html>
