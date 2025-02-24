@@ -477,14 +477,6 @@
 				const xValue = xSelect.property("value");
 				const yValue = ySelect.property("value");
 
-				// reset
-				chartArea.selectAll("*").remove();
-				annotations.selectAll("*").remove();
-
-				// debug
-				// console.log(d3.max(dat, d => d[xValue]))
-				// console.log(d3.max(dat, d => d[yValue]))
-
 				const xScale = d3.scaleLinear()
 					.domain([0, d3.max(dat, d => d[xValue])])
 					.range([0, chartWidth]);
@@ -493,13 +485,11 @@
 					.domain([0, d3.max(dat, d => d[yValue])])
 					.range([chartHeight, 0]);
 
-				const xAxis = d3.axisBottom(xScale);
-				const yAxis = d3.axisLeft(yScale);
-
+				annotations.selectAll("*").remove();
 
 				annotations.append("g")
 					.attr("transform", `translate(0,${chartHeight})`)
-					.call(xAxis)
+					.call(d3.axisBottom(xScale))
 					.append("text")
 					.attr("x", chartWidth / 2)
 					.attr("y", 40)
@@ -508,7 +498,7 @@
 					.text(xValue.toUpperCase());
 
 				annotations.append("g")
-					.call(yAxis)
+					.call(d3.axisLeft(yScale))
 					.append("text")
 					.attr("transform", "rotate(-90)")
 					.attr("x", -chartHeight / 2)
@@ -517,40 +507,33 @@
 					.attr("text-anchor", "middle")
 					.text(yValue.toUpperCase());
 
-				chartArea.selectAll("circle")
-					.data(dat)
-					.join("circle")
+				const circles = chartArea.selectAll("circle")
+					.data(dat, d => d.name); // key data by unique identifier
+
+				// ANIMATION
+				circles.enter()
+					.append("circle")
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
-					.attr("r", 4)
 					.attr("fill", d => typeColors[d.type1.toLowerCase()] || "gray")
 					.attr("opacity", 0.6)
-					.on("mouseover", function (event, d) {
-						d3.select(this)
-							.transition()
-							.duration(280)
-							.attr("opacity", 1.0)
-							.attr("r", 7);  // bigger circle
+					.attr("r", 0) // start small for smooth appearance
+					.transition()
+					.duration(800)
+					.attr("r", 4);
 
-						tooltip.html(`<strong>${d.name}</strong><br>${xValue}: ${d[xValue]}<br>${yValue}: ${d[yValue]}`)
-							.style("visibility", "visible");
-					})
-					.on("mousemove", event => tooltip.style("top", event.pageY + 10 + "px").style("left", event.pageX + 10 + "px"))
-					.on("mouseout", function () {
-						d3.select(this)
-							.transition()
-							.duration(150)
-							.attr("r", 4);  // back to original size
+				circles.transition()
+					.duration(800)
+					.attr("cx", d => xScale(d[xValue]))
+					.attr("cy", d => yScale(d[yValue]));
 
-						tooltip.style("visibility", "hidden");
-					});
-				// PANEL UPDATES
-				// .on("mouseover", (_, d) => updatePanel(d))
-				// .on("mouseout", () => panelSvg.selectAll("*").remove())
-				// .on("click", (_, d) => updatePanel(d));
-
-
+				circles.exit()
+					.transition()
+					.duration(800)
+					.attr("r", 0)
+					.remove();
 			}
+
 			createLegend();
 			updateScatter();
 			xSelect.on("change", updateScatter);
@@ -891,7 +874,6 @@
 						// Move the tooltip with the mouse
 						d3.select("#tooltip")
 							.style("left", (event.pageX + 5) + "px")
-							.style("top", (event.pageY - 28) + "px");
 					})
 					.on("mouseout", function () {
 						d3.select("#tooltip")
