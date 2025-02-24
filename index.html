@@ -165,7 +165,7 @@
 
 		<!-- SCATTER -->
 		<div class="scatter-section">
-			<svg id="scatter" class="scatter-chart" width="500" height="400"></svg>
+			<svg id="scatter" class="scatter-chart" width="600" height="500"></svg>
 
 			<div class="scatter-choices">
 				<label for="x-select">X-Axis:</label>
@@ -209,13 +209,17 @@
 			const scatter = d3.select("svg#scatter");
 			const width = scatter.attr("width");
 			const height = scatter.attr("height");
-			const margin = { top: 15, right: 15, bottom: 40, left: 50 };
+			const margin = { top: 40, right: 30, bottom: 50, left: 50 };
 			const chartWidth = width - margin.left - margin.right;
 			const chartHeight = height - margin.top - margin.bottom;
 
-			let annotations = scatter.append("g").attr("id", "annotations");
-			let chartArea = scatter.append("g").attr("id", "points")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			let annotations = scatter.append("g")
+				.attr("id", "annotations")
+				.attr("transform", `translate(${margin.left},${margin.top})`);
+
+			let chartArea = scatter.append("g")
+				.attr("id", "points")
+				.attr("transform", `translate(${margin.left},${margin.top})`);
 
 			const legendContainer = d3.select("#legend");
 			const tooltip = d3.select(".tooltip");
@@ -228,7 +232,6 @@
 				steel: "#B7B7CE", fairy: "#D685AD"
 			};
 
-			const getNiceExtent = (data, key) => d3.extent(data, d => d[key]);
 			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype);
 			const xSelect = d3.select("#x-select");
 			const ySelect = d3.select("#y-select");
@@ -300,17 +303,23 @@
 				chartArea.selectAll("*").remove();
 				annotations.selectAll("*").remove();
 
+				console.log(d3.max(dat, d => d[xValue]))
+				console.log(d3.max(dat, d => d[yValue]))
+
 				const xScale = d3.scaleLinear()
-					.domain(getNiceExtent(dat, xValue)).nice()
+					.domain([0, d3.max(dat, d => d[xValue])])
 					.range([0, chartWidth]);
 
 				const yScale = d3.scaleLinear()
-					.domain(getNiceExtent(dat, yValue)).nice()
+					.domain([0, d3.max(dat, d => d[yValue])])
 					.range([chartHeight, 0]);
+
+				const xAxis = d3.axisBottom(xScale);
+				const yAxis = d3.axisLeft(yScale);
 
 				annotations.append("g")
 					.attr("transform", `translate(0,${chartHeight})`)
-					.call(d3.axisBottom(xScale))
+					.call(xAxis)
 					.append("text")
 					.attr("x", chartWidth / 2)
 					.attr("y", 40)
@@ -319,7 +328,7 @@
 					.text(xValue.toUpperCase());
 
 				annotations.append("g")
-					.call(d3.axisLeft(yScale))
+					.call(yAxis)
 					.append("text")
 					.attr("transform", "rotate(-90)")
 					.attr("x", -chartHeight / 2)
