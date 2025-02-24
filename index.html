@@ -159,6 +159,7 @@
 
 			<!-- display information of pokemon -->
 			<svg id="pokemon-panel" width="250" height="300"></svg>
+			<svg id="legend" width="400" height="200"></svg>
 
 		</div>
 
@@ -186,33 +187,54 @@
 			let chartArea = scatter.append("g").attr("id", "points")
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+			const legendContainer = d3.select("#legend");
+
+			const typeColors = {
+				normal: "#A8A77A", fire: "#EE8130", water: "#6390F0", electric: "#F7D02C",
+				grass: "#7AC74C", ice: "#96D9D6", fighting: "#C22E28", poison: "#A33EA1",
+				ground: "#E2BF65", flying: "#A98FF3", psychic: "#F95587", bug: "#A6B91A",
+				rock: "#B6A136", ghost: "#735797", dragon: "#6F35FC", dark: "#705746",
+				steel: "#B7B7CE", fairy: "#D685AD"
+			};
+
 			const getNiceExtent = (data, key) => d3.extent(data, d => d[key]);
 			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype);
 			const xSelect = d3.select("#x-select");
 			const ySelect = d3.select("#y-select");
+
+			// LEGEND
+			function createLegend() {
+				legendContainer.html("");
+				Object.entries(typeColors).forEach(([type, color]) => {
+					legendContainer.append("div")
+						.attr("class", "legend-item")
+						.html(`<span style="display:inline-block;width:12px;height:12px;background:${color};margin-right:6px;"></span>${type}`);
+				});
+			}
 
 			// PANEL SELECTION
 			const panelSvg = d3.select("#pokemon-panel");
 			function updatePanel(row) {
 				panelSvg.selectAll("*").remove();
 
-				let entries = Object.entries(row);
-
 				panelSvg.append("text")
 					.attr("x", 10)
-					.attr("y", 20)
+					.attr("y", 25)
 					.attr("font-size", "16px")
 					.attr("font-weight", "bold")
 					.text(row.name || "Pokémon Details");
 
-				entries.forEach(([key, value], i) => {
-					if (key !== "name") {
-						panelSvg.append("text")
-							.attr("x", 10)
-							.attr("y", 40 + i * 20)
-							.attr("font-size", "12px")
-							.text(`${key}: ${value}`);
-					}
+				panelSvg.append("text")
+					.attr("x", 10)
+					.attr("y", 45)
+					.attr("font-style", "italic")
+					.text(row.classfication);
+
+				["type1", "hp", "attack", "defense", "sp_attack", "sp_defense", "speed"].forEach((attr, i) => {
+					panelSvg.append("text")
+						.attr("x", 10)
+						.attr("y", 65 + i * 20)
+						.text(`${attr.toUpperCase()}: ${row[attr]}`);
 				});
 			}
 
@@ -233,35 +255,37 @@
 					.range([chartHeight, 0]);
 
 				annotations.append("g")
-					.attr("transform", `translate(${margin.left},${chartHeight + margin.top})`)
+					.attr("transform", `translate(0,${chartHeight})`)
 					.call(d3.axisBottom(xScale))
 					.append("text")
 					.attr("x", chartWidth / 2)
-					.attr("y", 35)
+					.attr("y", 40)
 					.attr("fill", "black")
 					.attr("text-anchor", "middle")
-					.text(xValue);
+					.text(xValue.toUpperCase());
 
 				annotations.append("g")
-					.attr("transform", `translate(${margin.left},${margin.top})`)
 					.call(d3.axisLeft(yScale))
 					.append("text")
 					.attr("transform", "rotate(-90)")
 					.attr("x", -chartHeight / 2)
-					.attr("y", -35)
+					.attr("y", -40)
 					.attr("fill", "black")
 					.attr("text-anchor", "middle")
-					.text(yValue);
+					.text(yValue.toUpperCase());
 
 				chartArea.selectAll("circle")
 					.data(dat)
 					.join("circle")
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
-					.attr("r", 4)
-					.attr("fill", "steelblue")
-					.attr("opacity", 0.7)
-					.on("click", (event, d) => updatePanel(d));
+					.attr("r", 5)
+					.attr("fill", d => typeColors[d.type1.toLowerCase()] || "gray")
+					.attr("opacity", 0.8)
+					.on("mouseover", (_, d) => updatePanel(d))
+					.on("mouseout", () => panelSvg.selectAll("*").remove())
+					.on("click", (_, d) => updatePanel(d));
+
 
 			}
 
