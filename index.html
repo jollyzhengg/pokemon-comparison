@@ -232,7 +232,18 @@
 				steel: "#B7B7CE", fairy: "#D685AD"
 			};
 
-			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype);
+			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d => ({
+				name: d.name,
+				classification: d.classification,
+				type1: d.type1.toLowerCase(),
+				hp: +d.hp,
+				attack: +d.attack,
+				defense: +d.defense,
+				sp_attack: +d.sp_attack,
+				sp_defense: +d.sp_defense,
+				speed: +d.speed
+			}));
+
 			const xSelect = d3.select("#x-select");
 			const ySelect = d3.select("#y-select");
 
@@ -316,6 +327,7 @@
 
 				const xAxis = d3.axisBottom(xScale);
 				const yAxis = d3.axisLeft(yScale);
+
 
 				annotations.append("g")
 					.attr("transform", `translate(0,${chartHeight})`)
