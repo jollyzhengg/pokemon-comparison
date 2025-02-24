@@ -100,6 +100,17 @@
 			width: 400px;
 			height: 400px;
 		}
+
+		.tooltip {
+			position: absolute;
+			visibility: hidden;
+			padding: 8px;
+			background-color: white;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			pointer-events: none;
+		}
+
 	</style>
 </head>
 
@@ -158,8 +169,8 @@
 			</div>
 
 			<!-- display information of pokemon -->
-			<svg id="pokemon-panel" width="250" height="300"></svg>
-			<svg id="legend" width="400" height="200"></svg>
+			<!-- <svg id="pokemon-panel" width="250" height="300"></svg> -->
+			<div class="tooltip"></div>
 
 		</div>
 
@@ -188,6 +199,7 @@
 				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
 			const legendContainer = d3.select("#legend");
+			const tooltip = d3.select(".tooltip");
 
 			const typeColors = {
 				normal: "#A8A77A", fire: "#EE8130", water: "#6390F0", electric: "#F7D02C",
@@ -212,31 +224,31 @@
 				});
 			}
 
-			// PANEL SELECTION
-			const panelSvg = d3.select("#pokemon-panel");
-			function updatePanel(row) {
-				panelSvg.selectAll("*").remove();
+			// PANEL SELECTION (keeping as an alt design choice)
+			// const panelSvg = d3.select("#pokemon-panel");
+			// function updatePanel(row) {
+			// 	panelSvg.selectAll("*").remove();
 
-				panelSvg.append("text")
-					.attr("x", 10)
-					.attr("y", 25)
-					.attr("font-size", "16px")
-					.attr("font-weight", "bold")
-					.text(row.name || "Pokémon Details");
+			// 	panelSvg.append("text")
+			// 		.attr("x", 10)
+			// 		.attr("y", 25)
+			// 		.attr("font-size", "16px")
+			// 		.attr("font-weight", "bold")
+			// 		.text(row.name || "Pokémon Details");
 
-				panelSvg.append("text")
-					.attr("x", 10)
-					.attr("y", 45)
-					.attr("font-style", "italic")
-					.text(row.classfication);
+			// 	panelSvg.append("text")
+			// 		.attr("x", 10)
+			// 		.attr("y", 45)
+			// 		.attr("font-style", "italic")
+			// 		.text(row.classfication);
 
-				["type1", "hp", "attack", "defense", "sp_attack", "sp_defense", "speed"].forEach((attr, i) => {
-					panelSvg.append("text")
-						.attr("x", 10)
-						.attr("y", 65 + i * 20)
-						.text(`${attr.toUpperCase()}: ${row[attr]}`);
-				});
-			}
+			// 	["type1", "hp", "attack", "defense", "sp_attack", "sp_defense", "speed"].forEach((attr, i) => {
+			// 		panelSvg.append("text")
+			// 			.attr("x", 10)
+			// 			.attr("y", 65 + i * 20)
+			// 			.text(`${attr.toUpperCase()}: ${row[attr]}`);
+			// 	});
+			// }
 
 			function updateScatter() {
 				const xValue = xSelect.property("value");
@@ -282,13 +294,17 @@
 					.attr("r", 5)
 					.attr("fill", d => typeColors[d.type1.toLowerCase()] || "gray")
 					.attr("opacity", 0.8)
-					.on("mouseover", (_, d) => updatePanel(d))
-					.on("mouseout", () => panelSvg.selectAll("*").remove())
-					.on("click", (_, d) => updatePanel(d));
+					.on("mouseover", (event, d) => tooltip.html(`<strong>${d.name}</strong><br>${xValue}: ${d[xValue]}<br>${yValue}: ${d[yValue]}`).style("visibility", "visible"))
+					.on("mousemove", event => tooltip.style("top", event.pageY + 10 + "px").style("left", event.pageX + 10 + "px"))
+					.on("mouseout", () => tooltip.style("visibility", "hidden"));
+				// PANEL UPDATES
+				// .on("mouseover", (_, d) => updatePanel(d))
+				// .on("mouseout", () => panelSvg.selectAll("*").remove())
+				// .on("click", (_, d) => updatePanel(d));
 
 
 			}
-
+			createLegend();
 			updateScatter();
 			xSelect.on("change", updateScatter);
 			ySelect.on("change", updateScatter);
