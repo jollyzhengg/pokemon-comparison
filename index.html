@@ -8,10 +8,27 @@
 	<script src="https://d3js.org/d3.v7.min.js"></script>
 	<style>
 		body {
+			margin: 0px;
 			font-family: Arial, sans-serif;
-			background-color: #E0E1DD;
-			color: #0D1B2A;
-			padding: 20px;
+			background-color: #B4ACBD;
+			color: #0E0E0E;
+		}
+
+		.big-title {
+			margin: 0px;
+			margin-bottom: 40px;
+			font-size: 32px;
+			text-transform: uppercase;
+
+			color: #B4ACBD;
+			text-align: center;
+			background-color: #ECE7E7;
+			padding: 30px;
+
+		}
+
+		h1 {
+			margin: 0px;
 		}
 
 		.section {
@@ -44,15 +61,15 @@
 		}
 
 		.suggestion-item:hover {
-			background-color: #f0f0f0;
+			background-color: #D53141;
+			color: white;
 		}
 
 		.pokemon-container {
 			width: 400px;
 			margin-top: 20px;
 			padding: 10px;
-			border: 1px solid #ccc;
-			background-color: #fff;
+			background-color: #D53141;
 			display: flex;
 			flex-direction: column;
 			align-items: center;
@@ -62,7 +79,7 @@
 			width: 80%;
 			max-width: 300px;
 			height: auto;
-			background-color: #F8C8DC;
+			background-color: #ECE7E7;
 			padding: 10px;
 			border-radius: 5px;
 			display: block;
@@ -72,13 +89,17 @@
 		}
 
 		.pokemon-header {
-			font-size: 18px;
+			font-size: 24px;
 			font-weight: bold;
 			text-align: center;
-			margin-bottom: 10px;
-			background-color: #A6D8FF;
-			padding: 10px;
-			border-radius: 5px;
+			text-transform: uppercase;
+			margin: 0px;
+			background-color: #0E0E0E;
+			color: white;
+			border: none;
+			padding: 30px;
+			border-top-left-radius: 10px;
+			border-top-right-radius: 10px;
 		}
 
 		.pokemon-description {
@@ -91,6 +112,7 @@
 		}
 
 		.pokemon-description div {
+			width: 300px;
 			margin-bottom: 5px;
 		}
 
@@ -122,6 +144,7 @@
 			display: flex;
 			align-items: center;
 			gap: 5px;
+
 		}
 
 		.legend-color {
@@ -129,6 +152,40 @@
 			height: 15px;
 			border-radius: 50%;
 			display: inline-block;
+
+		}
+
+		.big-container {
+			display: flex;
+			flex-direction: row;
+		}
+
+		.scatter-group {
+			display: flex;
+			flex-direction: row;
+		}
+
+		.scatter-chart {
+			background-color: #ECE7E7;
+			margin: 10px;
+			margin-right: 0px;
+		}
+
+		.entry-head {
+			margin: 0px;
+			margin-bottom: -60px;
+		}
+
+		.delete-button {
+			margin-left: 378px;
+		}
+
+		.delete-button:hover {
+			width: 45px;
+		}
+
+		.big-container {
+			padding: 30px;
 		}
 	</style>
 </head>
@@ -139,87 +196,98 @@
 	</div>
 
 
-	<div class="poke-entry">
-		<!-- SEARCH BAR -->
-		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-			<input type="text" id="pokemon-input" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
-			<div id="suggestions" class="suggestions"></div>
-		</div>
+	<div class="big-container">
 
-		<!--ENTRY -->
-		<div id="pokemon-container" class="pokemon-container">
+		<div class="poke-entry">
+			<!-- SEARCH BAR -->
+			<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
+				<input type="text" id="pokemon-input" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
+				<div id="suggestions" class="suggestions"></div>
+			</div>
 
 			<div class="entry-head">
-				<div id="pokemon-header" class="pokemon-header">Enter a Pokémon name to see details</div>
+				<div id="pokemon-header" class="pokemon-header">Pokemon</div>
 				<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
-					style="cursor: pointer; width: 20px; height: 20px;">
+					style="cursor: pointer; width: 30px; height: 30px;">
 			</div>
 
-			<img id="pokemon-image" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
-				alt="Pokémon Image">
-			<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
-		</div>
+			<!--ENTRY -->
+			<div id="pokemon-container" class="pokemon-container">
 
-		<!-- SPIDER -->
-		<svg id="spider-chart" class="spider-chart"></svg>
-	</div>
-
-	<div class="middle">
-
-		<!-- SCATTER -->
-		<div class="scatter-section">
-			<svg id="scatter" class="scatter-chart" width="600" height="500"></svg>
-			<svg id="legend"></svg>
-
-			<div class="scatter-choices">
-				<label for="x-select">X-Axis:</label>
-				<select id="x-select">
-					<option value="hp">HP</option>
-					<option value="attack">Attack</option>
-					<option value="defense">Defense</option>
-					<option value="sp_attack">Sp. Attack</option>
-					<option value="sp_defense">Sp. Defense</option>
-				</select>
-
-				<label for="y-select">Y-Axis:</label>
-				<select id="y-select">
-					<option value="attack">Attack</option>
-					<option value="hp">HP</option>
-					<option value="defense">Defense</option>
-					<option value="sp_attack">Sp. Attack</option>
-					<option value="sp_defense">Sp. Defense</option>
-				</select>
+				<div class="img-contain">
+					<img id="pokemon-image" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
+						alt="Pokémon Image">
+				</div>
+				<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
 			</div>
 
-			<!-- <svg id="pokemon-panel" width="250" height="300"></svg> -->
-			<div class="tooltip"></div>
-
-		</div>
-		<svg id="bar-chart"></svg>
-	</div>
-
-
-	<div class="poke-entry">
-		<!-- SEARCH BAR -->
-		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-			<input type="text" id="pokemon-input2" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
-			<div id="suggestions2" class="suggestions"></div>
-
+			<!-- SPIDER -->
+			<svg id="spider-chart" class="spider-chart"></svg>
 		</div>
 
-		<!--ENTRY -->
-		<div id="pokemon-container2" class="pokemon-container">
+		<!-- MIDLE SECTION -->
+		<div class="middle">
+			<!-- SCATTER -->
+			<div class="scatter-section">
+
+				<div class="scatter-choices">
+					<label for="x-select">X-Axis:</label>
+					<select id="x-select">
+						<option value="hp">HP</option>
+						<option value="attack">Attack</option>
+						<option value="defense">Defense</option>
+						<option value="sp_attack">Sp. Attack</option>
+						<option value="sp_defense">Sp. Defense</option>
+					</select>
+
+					<label for="y-select">Y-Axis:</label>
+					<select id="y-select">
+						<option value="attack">Attack</option>
+						<option value="hp">HP</option>
+						<option value="defense">Defense</option>
+						<option value="sp_attack">Sp. Attack</option>
+						<option value="sp_defense">Sp. Defense</option>
+					</select>
+				</div>
+
+				<div class="scatter-group">
+					<svg id="scatter" class="scatter-chart" width="500" height="400"></svg>
+					<svg id="legend"></svg>
+				</div>
+
+				<!-- <svg id="pokemon-panel" width="250" height="300"></svg> -->
+				<div class="tooltip"></div>
+
+			</div>
+			<svg id="bar-chart"></svg>
+		</div>
+
+
+		<div class="poke-entry">
+			<!-- SEARCH BAR -->
+			<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
+				<input type="text" id="pokemon-input2" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
+				<div id="suggestions2" class="suggestions"></div>
+
+			</div>
+
 			<div class="entry-head">
-				<div id="pokemon-header2" class="pokemon-header">Enter a Pokémon name to see details</div>
+				<div id="pokemon-header2" class="pokemon-header">Pokemon</div>
 				<img id="delete-button2" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
-					style="cursor: pointer; width: 20px; height: 20px;">
+					style="cursor: pointer; width: 30px; height: 30px;">
 			</div>
-			<img id="pokemon-image2" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
-				alt="Pokémon Image">
-			<div id="pokemon-description2" class="pokemon-description">Start by typing a Pokémon name above.</div>
-		</div>
 
-		<svg id="spider-chart2" class="spider-chart"></svg>
+			<!--ENTRY -->
+			<div id="pokemon-container2" class="pokemon-container">
+				<div class="img-contain">
+					<img id="pokemon-image2" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
+						alt="Pokémon Image">
+				</div>
+				<div id="pokemon-description2" class="pokemon-description">Start by typing a Pokémon name above.</div>
+			</div>
+
+			<svg id="spider-chart2" class="spider-chart"></svg>
+		</div>
 	</div>
 
 
@@ -279,7 +347,6 @@
 
 				const legendItemSize = 15;
 				const spacing = 5;
-
 				const entries = Object.entries(typeColors);
 
 				const legend = legendContainer
@@ -296,6 +363,7 @@
 					.attr("width", legendItemSize)
 					.attr("height", legendItemSize)
 					.attr("fill", d => d[1]);
+
 
 				legendItems.append("text")
 					.attr("x", legendItemSize + spacing)
@@ -381,7 +449,7 @@
 					.join("circle")
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
-					.attr("r", 5)
+					.attr("r", 3)
 					.attr("fill", d => typeColors[d.type1.toLowerCase()] || "gray")
 					.attr("opacity", 0.8)
 					.on("mouseover", (event, d) => tooltip.html(`<strong>${d.name}</strong><br>${xValue}: ${d[xValue]}<br>${yValue}: ${d[yValue]}`).style("visibility", "visible"))
@@ -603,7 +671,7 @@
 				////// DELETE BUTTON FUNCTIONALITY
 				deleteButton.on("click", function () {
 					input.property("value", "");
-					header.html("Enter a Pokémon name to see details");
+					header.html("Pokemon");
 					image.attr("src", "post-process-data/pokemon_jpg/placeholder.png").style("display", "none");
 					description.html("Start by typing a Pokémon name above.");
 					spiderChart.selectAll("*").remove();
