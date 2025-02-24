@@ -118,7 +118,13 @@
 			margin-bottom: 5px;
 		}
 
-		.spider-chart {
+		.spider-chart1 {
+			margin-top: 0px;
+			width: 368px;
+			height: 300px;
+			background-color: #ECE7E7;
+		}
+		.spider-chart2 {
 			margin-top: 0px;
 			width: 368px;
 			height: 300px;
@@ -265,7 +271,7 @@
 
 	<div class="big-container">
 
-		<div class="poke-entry">
+		<div class="poke-entry1">
 			<div class="divder">
 				<!-- SEARCH BAR -->
 				<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
@@ -290,7 +296,7 @@
 			</div>
 
 			<!-- SPIDER -->
-			<svg id="spider-chart" class="spider-chart"></svg>
+			<svg id="spider-chart1" class="spider-chart"></svg>
 		</div>
 
 		<!-- MIDLE SECTION -->
@@ -331,7 +337,7 @@
 		</div>
 
 
-		<div class="poke-entry">
+		<div class="poke-entry2">
 
 			<div class="divder">
 				<!-- SEARCH BAR -->
@@ -707,7 +713,7 @@
 			const pokemonNames = data.map(d => d.name);
 
 			// Select all entries
-			d3.selectAll(".poke-entry").each(function () {
+			d3.selectAll(".poke-entry1").each(function () {
 				const entry = d3.select(this);
 
 				// Elements within this entry
@@ -717,7 +723,7 @@
 				const header = entry.select(".pokemon-header");
 				const image = entry.select(".pokemon-image");
 				const description = entry.select(".pokemon-description");
-				const spiderChart = entry.select(".spider-chart");
+				const spiderChart = entry.select("#spider-chart1");
 
 				input.on("input", function () {
 					const value = this.value.toLowerCase();
@@ -749,6 +755,49 @@
 					spiderChart.selectAll("*").remove();
 				});
 			});
+			d3.selectAll(".poke-entry2").each(function () {
+				const entry = d3.select(this);
+
+				// Elements within this entry
+				const input = entry.select(".poke-input");
+				const suggestions = entry.select(".suggestions");
+				const deleteButton = entry.select(".delete-button");
+				const header = entry.select(".pokemon-header");
+				const image = entry.select(".pokemon-image");
+				const description = entry.select(".pokemon-description");
+				const spiderChart = entry.select("#spider-chart2");
+
+				input.on("input", function () {
+					const value = this.value.toLowerCase();
+					suggestions.html("");
+
+					if (value) {
+						const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
+						filteredNames.forEach(name => {
+							suggestions.append("div")
+								.attr("class", "suggestion-item")
+								.text(name)
+								.on("click", function () {
+									input.property("value", name);
+									suggestions.html("");
+									loadPokemonImage(name, image);
+									generateSpiderChart(name, spiderChart);
+									displayPokemonInfo(name, header, description);
+								});
+						});
+					}
+				});
+
+				////// DELETE BUTTON FUNCTIONALITY
+				deleteButton.on("click", function () {
+					input.property("value", "");
+					header.html("Pokemon");
+					image.attr("src", "post-process-data/pokemon_jpg/placeholder.png").style("display", "none");
+					description.html("Start by typing a Pokémon name above.");
+					spiderChart.selectAll("*").remove();
+				});
+			});
+		
 		});
 
 
@@ -784,116 +833,115 @@
 
 		/////// SPIDER CHART
 		function generateSpiderChart(name, chartElement) {
-			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
+    const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
-			const stats = [
-				{ axis: "HP", value: +selectedPokemon.hp },
-				{ axis: "Attack", value: +selectedPokemon.attack },
-				{ axis: "Defense", value: +selectedPokemon.defense },
-				{ axis: "Sp. Attack", value: +selectedPokemon.sp_attack },
-				{ axis: "Sp. Defense", value: +selectedPokemon.sp_defense },
-				{ axis: "Speed", value: +selectedPokemon.speed }
-			];
+    const stats = [
+        { axis: "HP", value: +selectedPokemon.hp },
+        { axis: "Attack", value: +selectedPokemon.attack },
+        { axis: "Defense", value: +selectedPokemon.defense },
+        { axis: "Sp. Attack", value: +selectedPokemon.sp_attack },
+        { axis: "Sp. Defense", value: +selectedPokemon.sp_defense },
+        { axis: "Speed", value: +selectedPokemon.speed }
+    ];
 
-			chartElement.selectAll("*").remove();
+    chartElement.selectAll("*").remove();  // Clear the existing chart
 
-			const width = 368;
-			const height = 300;
-			const maxValue = d3.max(stats, d => d.value);
-			const angleSlice = (Math.PI * 2) / stats.length;
+    const width = 400;
+    const height = 400;
+    const maxValue = d3.max(stats, d => d.value);
+    const angleSlice = (Math.PI * 2) / stats.length;
 
-			const svg = d3.select(".spider-chart")
-				.attr("width", width)
-				.attr("height", height)
+    // Create the SVG element inside the provided chartElement
+    const svg = chartElement.append("svg")
+        .attr("width", width)
+        .attr("height", height);
 
+    const radialLine = d3.lineRadial()
+        .angle((d, i) => i * angleSlice)
+        .radius(d => (d.value / maxValue) * (width / 2 - 40));
 
-			const radialLine = d3.lineRadial()
-				.angle((d, i) => i * angleSlice)
-				.radius(d => (d.value / maxValue) * (width / 2 - 40));
+    const radarData = stats.concat(stats[0]);
 
-			const radarData = stats.concat(stats[0]);
+    svg.append("path")
+        .datum(radarData)
+        .attr("d", radialLine)
+        .attr("fill", "rgba(0, 150, 255, 0.5)") // Change fill color
+        .attr("stroke", "#00A6D6")
+        .attr("stroke-width", 2)
+        .attr("transform", `translate(${width / 2}, ${height / 2})`);
 
-			svg.append("path")
-				.datum(radarData)
-				.attr("d", radialLine)
-				.attr("fill", "rgba(255, 82, 32, 0.8)") // change
-				.attr("stroke", "#F74A27")
-				.attr("stroke-width", 2)
-				.attr("transform", `translate(${width / 2}, ${height / 2})`);
+    // Add axes and dashes
+    const dashCount = 5; // Number of dashes
+    for (let j = 1; j <= dashCount; j++) {
+        const radius = (j / dashCount) * (width / 2 - 40);
+        svg.append("circle")
+            .attr("cx", width / 2)
+            .attr("cy", height / 2)
+            .attr("r", radius)
+            .attr("fill", "none")
+            .attr("stroke", "#ccc")
+            .attr("stroke-dasharray", "4, 2"); // Dashes for circles
+    }
 
-			// Add axes and dashes
-			const dashCount = 5; // Number of dashes
-			for (let j = 1; j <= dashCount; j++) {
-				const radius = (j / dashCount) * (width / 2 - 40);
-				svg.append("circle")
-					.attr("cx", width / 2)
-					.attr("cy", height / 2)
-					.attr("r", radius)
-					.attr("fill", "none")
-					.attr("stroke", "#821010")
-					.attr("stroke-dasharray", "4, 2"); // Dashes for circles
+    // Add axes and labels
+    stats.forEach((d, i) => {
+        const angle = angleSlice * i;
+        svg.append("line")
+            .attr("x1", width / 2)
+            .attr("y1", height / 2)
+            .attr("x2", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 40)))
+            .attr("y2", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 40)))
+            .attr("stroke", "#ccc");
 
-			}
+        svg.append("text")
+            .attr("x", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 30)))
+            .attr("y", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 30)))
+            .text(d.axis)
+            .attr("font-size", "12px")
+            .attr("text-anchor", "middle");
 
-			// Add axes and labels
-			stats.forEach((d, i) => {
-				const angle = angleSlice * i;
-				svg.append("line")
-					.attr("x1", width / 2)
-					.attr("y1", height / 2)
-					.attr("x2", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 40)))
-					.attr("y2", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 40)))
-					.attr("stroke", "#821010");
+        // Add points to the edges
+        const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxValue) * (width / 2 - 40));
+        const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxValue) * (height / 2 - 40));
 
-				svg.append("text")
-					.attr("x", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 30)))
-					.attr("y", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 30)))
-					.text(d.axis)
-					.attr("font-size", "12px")
-					.attr("text-anchor", "middle");
+        // Add interactivity (hover effects)
+        svg.append("circle")
+            .attr("cx", pointX)
+            .attr("cy", pointY)
+            .attr("r", 5)
+            .attr("fill", "#00A6D6")
+            .on("mouseover", function (event) {
+                // Show tooltip
+                d3.select("#tooltip")
+                    .style("visibility", "visible")
+                    .html(`${d.axis}: ${d.value}`)
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mousemove", function (event) {
+                // Move the tooltip with the mouse
+                d3.select("#tooltip")
+                    .style("left", (event.pageX + 5) + "px")
+                    .style("top", (event.pageY - 28) + "px");
+            })
+            .on("mouseout", function () {
+                d3.select("#tooltip")
+                    .style("visibility", "hidden"); // hide tooltip
+            });
+    });
 
-				// Add points to the edges
-				const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxValue) * (width / 2 - 40));
-				const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxValue) * (height / 2 - 40));
-
-				// Add interactivity (hover effects)
-				svg.append("circle")
-					.attr("cx", pointX)
-					.attr("cy", pointY)
-					.attr("r", 5)
-					.attr("fill", "#D53141")
-					.on("mouseover", function (event) {
-						// Show tooltip
-						d3.select("#tooltip")
-							.style("visibility", "visible")
-							.html(`${d.axis}: ${d.value}`)
-							.style("left", (event.pageX + 5) + "px")
-							.style("top", (event.pageY - 28) + "px");
-					})
-					.on("mousemove", function (event) {
-						// Move the tooltip with the mouse
-						d3.select("#tooltip")
-							.style("left", (event.pageX + 5) + "px")
-					})
-					.on("mouseout", function () {
-						d3.select("#tooltip")
-							.style("visibility", "hidden"); // hide tooltip
-					});
-			});
-
-			// tool tip
-			const tooltip = d3.select("body").append("div")
-				.attr("id", "tooltip")
-				.style("position", "absolute")
-				.style("visibility", "hidden")
-				.style("background-color", "#fff")
-				.style("padding", "5px")
-				.style("border-radius", "3px")
-				.style("box-shadow", "0px 0px 10px rgba(0, 0, 0, 0.1)")
-				.style("font-size", "12px")
-				.style("color", "#333");
-		}
-
+    // tool tip
+    const tooltip = d3.select("body").append("div")
+        .attr("id", "tooltip")
+        .style("position", "absolute")
+        .style("visibility", "hidden")
+        .style("background-color", "#fff")
+        .style("padding", "5px")
+        .style("border-radius", "3px")
+        .style("box-shadow", "0px 0px 10px rgba(0, 0, 0, 0.1)")
+        .style("font-size", "12px")
+        .style("color", "#333");
+}
 
 		/////////// POKEMON INFORMATION DIPSPLAY
 		function displayPokemonInfo(name, header, description) {
