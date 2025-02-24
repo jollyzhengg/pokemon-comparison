@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Pokémon Comparison</title>
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+	<style>
+		body {
+			font-family: Arial, sans-serif;
+			background-color: #E0E1DD;
+			color: #0D1B2A;
+			padding: 20px;
+		}
+
+		.section {
+			margin-bottom: 40px;
+		}
+
+		.pokemon-selection {
+			position: relative;
+			/* Makes the suggestions appear relative to this */
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		.suggestions {
+			position: absolute;
+			top: 100%;
+			/* Ensures the suggestions appear directly below the input */
+			left: 0;
+			width: 100%;
+			background: white;
+			max-height: 150px;
+			overflow-y: auto;
+			z-index: 1;
+		}
+
+		.suggestion-item {
+			padding: 5px;
+			cursor: pointer;
+		}
+
+		.suggestion-item:hover {
+			background-color: #f0f0f0;
+		}
+
+		.pokemon-container {
+			width: 400px;
+			margin-top: 20px;
+			padding: 10px;
+			border: 1px solid #ccc;
+			background-color: #fff;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.pokemon-image {
+			width: 80%;
+			max-width: 300px;
+			height: auto;
+			background-color: #F8C8DC;
+			padding: 10px;
+			border-radius: 5px;
+			display: block;
+			margin-bottom: 10px;
+			margin-left: auto;
+			margin-right: auto;
+		}
+
+		.pokemon-header {
+			font-size: 18px;
+			font-weight: bold;
+			text-align: center;
+			margin-bottom: 10px;
+			background-color: #A6D8FF;
+			padding: 10px;
+			border-radius: 5px;
+		}
+
+		.pokemon-description {
+			font-size: 14px;
+			color: #333;
+			margin-bottom: 10px;
+			background-color: #FFD9B3;
+			padding: 10px;
+			border-radius: 5px;
+		}
+
+		.pokemon-description div {
+			margin-bottom: 5px;
+		}
+
+		.spider-chart {
+			margin-top: 20px;
+			border: 1px solid #ccc;
+			width: 400px;
+			height: 400px;
+		}
+	</style>
+</head>
+
+<body>
+	<h1>Poké-Compare</h1>
+
+	<div class="section">
+
+		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
+			<input type="text" id="pokemon-input" placeholder="Type Pokémon name..." autocomplete="off">
+			<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Delete"
+				style="cursor: pointer; width: 20px; height: 20px;">
+			<div id="suggestions" class="suggestions"></div>
+
+		</div>
+
+
+
+
+		<!-- Pokémon container with sections for name, image, description, and radar chart -->
+		<!-- Pokémon container with sections for name, image, description, and radar chart -->
+		<div id="pokemon-container" class="pokemon-container">
+			<!-- Pokémon Header -->
+			<div id="pokemon-header" class="pokemon-header">Enter a Pokémon name to see details</div>
+
+			<!-- Pokémon Image -->
+			<img id="pokemon-image" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
+				alt="Pokémon Image">
+
+			<!-- Pokémon Description -->
+			<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
+		</div>
+
+		<!-- SCATTER -->
+		<div class="scatter-section">
+			<svg id="scatter" class="scatter-chart" width="500" height="400"></svg>
+
+			<div class="scatter-choices">
+				<label for="x-select">X-Axis:</label>
+				<select id="x-select">
+					<option value="hp">HP</option>
+					<option value="attack">Attack</option>
+					<option value="defense">Defense</option>
+					<option value="sp_attack">Sp. Attack</option>
+					<option value="sp_defense">Sp. Defense</option>
+				</select>
+
+				<label for="y-select">Y-Axis:</label>
+				<select id="y-select">
+					<option value="attack">Attack</option>
+					<option value="hp">HP</option>
+					<option value="defense">Defense</option>
+					<option value="sp_attack">Sp. Attack</option>
+					<option value="sp_defense">Sp. Defense</option>
+				</select>
+			</div>
+
+			<!-- display information of pokemon -->
+			<svg id="pokemon-panel" width="250" height="300"></svg>
+
+		</div>
+
+		<svg id="spider-chart" class="spider-chart"></svg>
+		<svg id="bar-chart"></svg>
+
+	</div>
+
+	<script>
+
+
+		// pokedex entry is initially empty
+		let pokemonData = [];
+
+		/////// SCATTER PLOT
+		async function generateScatter() {
+			const scatter = d3.select("svg#scatter");
+			const width = scatter.attr("width");
+			const height = scatter.attr("height");
+			const margin = { top: 15, right: 15, bottom: 40, left: 50 };
+			const chartWidth = width - margin.left - margin.right;
+			const chartHeight = height - margin.top - margin.bottom;
+
+			let annotations = scatter.append("g").attr("id", "annotations");
+			let chartArea = scatter.append("g").attr("id", "points")
+				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+			const getNiceExtent = (data, key) => d3.extent(data, d => d[key]);
+			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype);
+			const xSelect = d3.select("#x-select");
+			const ySelect = d3.select("#y-select");
+
+			// PANEL SELECTION
+			const panelSvg = d3.select("#pokemon-panel");
+			function updatePanel(row) {
+				panelSvg.selectAll("*").remove();
+
+				let entries = Object.entries(row);
+
+				panelSvg.append("text")
+					.attr("x", 10)
+					.attr("y", 20)
+					.attr("font-size", "16px")
+					.attr("font-weight", "bold")
+					.text(row.name || "Pokémon Details");
+
+				entries.forEach(([key, value], i) => {
+					if (key !== "name") {
+						panelSvg.append("text")
+							.attr("x", 10)
+							.attr("y", 40 + i * 20)
+							.attr("font-size", "12px")
+							.text(`${key}: ${value}`);
+					}
+				});
+			}
+
+			function updateScatter() {
+				const xValue = xSelect.property("value");
+				const yValue = ySelect.property("value");
+
+				// reset
+				chartArea.selectAll("*").remove();
+				annotations.selectAll("*").remove();
+
+				const xScale = d3.scaleLinear()
+					.domain(getNiceExtent(dat, xValue)).nice()
+					.range([0, chartWidth]);
+
+				const yScale = d3.scaleLinear()
+					.domain(getNiceExtent(dat, yValue)).nice()
+					.range([chartHeight, 0]);
+
+				annotations.append("g")
+					.attr("transform", `translate(${margin.left},${chartHeight + margin.top})`)
+					.call(d3.axisBottom(xScale))
+					.append("text")
+					.attr("x", chartWidth / 2)
+					.attr("y", 35)
+					.attr("fill", "black")
+					.attr("text-anchor", "middle")
+					.text(xValue);
+
+				annotations.append("g")
+					.attr("transform", `translate(${margin.left},${margin.top})`)
+					.call(d3.axisLeft(yScale))
+					.append("text")
+					.attr("transform", "rotate(-90)")
+					.attr("x", -chartHeight / 2)
+					.attr("y", -35)
+					.attr("fill", "black")
+					.attr("text-anchor", "middle")
+					.text(yValue);
+
+				chartArea.selectAll("circle")
+					.data(dat)
+					.join("circle")
+					.attr("cx", d => xScale(d[xValue]))
+					.attr("cy", d => yScale(d[yValue]))
+					.attr("r", 4)
+					.attr("fill", "steelblue")
+					.attr("opacity", 0.7)
+					.on("click", (event, d) => updatePanel(d));
+
+			}
+
+			updateScatter();
+			xSelect.on("change", updateScatter);
+			ySelect.on("change", updateScatter);
+
+
+		}
+
+		// scatter is always displayed on default
+		generateScatter();
+
+
+		function generateBarChart(pokemon1, pokemon2) {
+			const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon1.toLowerCase());
+			const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon2.toLowerCase());
+
+			// debugger
+			if (!selectedPokemon1 || !selectedPokemon2) {
+				console.error("One or both Pokémon not found for bar chart.");
+				return;
+			}
+
+
+			const stats = ["hp", "attack", "defense", "sp_attack", "sp_defense", "speed"];
+			const data = stats.map(stat => ({
+				category: stat.toUpperCase(),
+				pokemon1: { name: pokemon1, value: +selectedPokemon1[stat] },
+				pokemon2: { name: pokemon2, value: +selectedPokemon2[stat] }
+			}));
+
+			// remove previous chart
+			d3.select("#bar-chart").selectAll("*").remove();
+
+			// Dimensions
+			const width = 600;
+			const height = 320;
+			const margin = { top: 50, right: 150, bottom: 40, left: 100 };
+
+			// Create SVG
+			const svg = d3.select("#bar-chart")
+				.attr("width", width)
+				.attr("height", height);
+
+			// Add Chart Title
+			svg.append("text")
+				.attr("x", width / 2)
+				.attr("y", margin.top / 2)
+				.attr("text-anchor", "middle")
+				.style("font-size", "18px")
+				.style("font-weight", "bold")
+				.text("Deeper Look into Stats");
+
+			const xScale = d3.scaleLinear()
+				.domain([0, d3.max(data, d => Math.max(d.pokemon1.value, d.pokemon2.value))])
+				.range([0, width - margin.left - margin.right]);
+			const yScale = d3.scaleBand()
+				.domain(stats.map(d => d.toUpperCase()))
+				.range([0, height - margin.top - margin.bottom])
+				.padding(0.2);
+
+			const g = svg.append("g")
+				.attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+			// Tooltip
+			const tooltip = d3.select("body").append("div")
+				.style("position", "absolute")
+				.style("background", "white")
+				.style("padding", "5px")
+				.style("border-radius", "5px")
+				.style("border", "1px solid #ccc")
+				.style("pointer-events", "none")
+				.style("opacity", 0);
+
+			// Draw Pokémon 1 Bars
+			g.selectAll(".bar1")
+				.data(data)
+				.enter().append("rect")
+				.attr("class", "bar1")
+				.attr("y", d => yScale(d.category))
+				.attr("height", yScale.bandwidth() / 2)
+				.attr("width", 0)  // Start from 0 and transition later
+				.attr("fill", "#FF595E") // Color for Pokémon 1
+				.on("mouseover", function (event, d) {
+					tooltip.style("opacity", 1)
+						.html(`${d.pokemon1.name}: ${d.pokemon1.value}`)
+						.style("left", `${event.pageX + 10}px`)
+						.style("top", `${event.pageY - 20}px`);
+				})
+				.on("mousemove", function (event) {
+					tooltip.style("left", `${event.pageX + 10}px`)
+						.style("top", `${event.pageY - 20}px`);
+				})
+				.on("mouseout", function () {
+					tooltip.style("opacity", 0);
+				})
+				.transition()
+				.duration(800)
+				.attr("width", d => xScale(d.pokemon1.value));
+
+			// Draw Pokémon 2 Bars
+			g.selectAll(".bar2")
+				.data(data)
+				.enter().append("rect")
+				.attr("class", "bar2")
+				.attr("y", d => yScale(d.category) + yScale.bandwidth() / 2)
+				.attr("height", yScale.bandwidth() / 2)
+				.attr("width", 0)  // Start from 0 and transition later
+				.attr("fill", "#1982C4") // Color for Pokémon 2
+				.on("mouseover", function (event, d) {
+					tooltip.style("opacity", 1)
+						.html(`${d.pokemon2.name}: ${d.pokemon2.value}`)
+						.style("left", `${event.pageX + 10}px`)
+						.style("top", `${event.pageY - 20}px`);
+				})
+				.on("mousemove", function (event) {
+					tooltip.style("left", `${event.pageX + 10}px`)
+						.style("top", `${event.pageY - 20}px`);
+				})
+				.on("mouseout", function () {
+					tooltip.style("opacity", 0);
+				})
+				.transition()
+				.duration(800)
+				.attr("width", d => xScale(d.pokemon2.value));
+
+			g.append("g")
+				.attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
+				.call(d3.axisBottom(xScale));
+
+			g.append("g")
+				.call(d3.axisLeft(yScale));
+
+			const legend = svg.append("g")
+				.attr("transform", `translate(${width - margin.right + 20}, ${margin.top})`);
+
+			legend.append("rect")
+				.attr("x", 0)
+				.attr("y", 0)
+				.attr("width", 15)
+				.attr("height", 15)
+				.attr("fill", "#FF595E");
+
+			legend.append("text")
+				.attr("x", 20)
+				.attr("y", 12)
+				.text(pokemon1)
+				.style("font-size", "14px")
+				.attr("alignment-baseline", "middle");
+
+			legend.append("rect")
+				.attr("x", 0)
+				.attr("y", 25)
+				.attr("width", 15)
+				.attr("height", 15)
+				.attr("fill", "#1982C4");
+
+			legend.append("text")
+				.attr("x", 20)
+				.attr("y", 37)
+				.text(pokemon2)
+				.style("font-size", "14px")
+				.attr("alignment-baseline", "middle");
+		}
+
+		// Load Pokémon names and numbers from CSV and set up autocomplete
+		d3.csv("post-process-data/pokemon_dataset.csv").then(function (data) {
+			pokemonData = data;
+			const pokemonNames = data.map(d => d.name);
+
+			const input = d3.select("#pokemon-input");
+			const suggestions = d3.select("#suggestions");
+
+			input.on("input", function () {
+				const value = this.value.toLowerCase();
+				suggestions.html("");
+
+				if (value) {
+					const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
+					filteredNames.forEach(name => {
+						suggestions.append("div")
+							.attr("class", "suggestion-item")
+							.text(name)
+							.on("click", function () {
+								input.property("value", name);
+								suggestions.html("");
+								loadPokemonImage(name);
+								generateSpiderChart(name);
+								displayPokemonInfo(name);
+
+							});
+					});
+				}
+			});
+			generateBarChart("Bulbasaur", "Squirtle");
+		});
+
+		// Add the event listener for the delete button
+		// Add the event listener for the delete button
+		d3.select("#delete-button").on("click", function () {
+
+			// RESET
+			d3.select("#pokemon-input").property("value", "");
+			d3.select("#pokemon-header").html("Enter a Pokémon name to see details");
+			d3.select("#pokemon-image").style("display", "none");
+			d3.select("#pokemon-description").html("Start by typing a Pokémon name above.");
+
+			// CLEAR SPIDER
+			d3.select("#spider-chart").selectAll("*").remove();
+		});
+
+
+
+		//////////// POKEMON IMAQGE
+		function loadPokemonImage(name) {
+			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
+
+			if (selectedPokemon) {
+				const pokedexNumber = selectedPokemon.pokedex_number;
+				const imageUrl = `post-process-data/pokemon_jpg/${pokedexNumber}.png`;
+				const image = d3.select("#pokemon-image");
+				image.attr("src", imageUrl).style("display", "block");
+			} else {
+				console.error("Pokémon not found");
+			}
+		}
+
+		/////// SPIDER CHART
+		function generateSpiderChart(name) {
+			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
+
+			if (!selectedPokemon) {
+				console.error("Pokémon not found for spider chart.");
+				return;
+			}
+
+			const stats = [
+				{ axis: "HP", value: +selectedPokemon.hp },
+				{ axis: "Attack", value: +selectedPokemon.attack },
+				{ axis: "Defense", value: +selectedPokemon.defense },
+				{ axis: "Sp. Attack", value: +selectedPokemon.sp_attack },
+				{ axis: "Sp. Defense", value: +selectedPokemon.sp_defense },
+				{ axis: "Speed", value: +selectedPokemon.speed }
+			];
+
+			d3.select("#spider-chart").selectAll("*").remove();
+
+			const width = 400;
+			const height = 400;
+			const maxValue = d3.max(stats, d => d.value);
+			const angleSlice = (Math.PI * 2) / stats.length;
+
+			const svg = d3.select("#spider-chart")
+				.attr("width", width)
+				.attr("height", height)
+				.style("background-color", "#f5f5dc"); // Set cream white background
+
+			// Create the radial lines
+			const radialLine = d3.lineRadial()
+				.angle((d, i) => i * angleSlice)
+				.radius(d => (d.value / maxValue) * (width / 2 - 40));
+
+			const radarData = stats.concat(stats[0]); // Close the loop for the radar chart
+
+			svg.append("path")
+				.datum(radarData)
+				.attr("d", radialLine)
+				.attr("fill", "rgba(0, 150, 255, 0.5)")
+				.attr("stroke", "#00A6D6")
+				.attr("stroke-width", 2)
+				.attr("transform", `translate(${width / 2}, ${height / 2})`);
+
+			// Add axes and dashes
+			const dashCount = 5; // Number of dashes
+			for (let j = 1; j <= dashCount; j++) {
+				const radius = (j / dashCount) * (width / 2 - 40);
+				svg.append("circle")
+					.attr("cx", width / 2)
+					.attr("cy", height / 2)
+					.attr("r", radius)
+					.attr("fill", "none")
+					.attr("stroke", "#ccc")
+					.attr("stroke-dasharray", "4, 2"); // Dashes for circles
+
+			}
+
+			// Add axes and labels
+			stats.forEach((d, i) => {
+				const angle = angleSlice * i;
+				svg.append("line")
+					.attr("x1", width / 2)
+					.attr("y1", height / 2)
+					.attr("x2", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 40)))
+					.attr("y2", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 40)))
+					.attr("stroke", "#ccc");
+
+				svg.append("text")
+					.attr("x", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 30)))
+					.attr("y", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 30)))
+					.text(d.axis)
+					.attr("font-size", "12px")
+					.attr("text-anchor", "middle");
+
+				// Add points to the edges
+				const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxValue) * (width / 2 - 40));
+				const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxValue) * (height / 2 - 40));
+
+				// Add interactivity (hover effects)
+				svg.append("circle")
+					.attr("cx", pointX)
+					.attr("cy", pointY)
+					.attr("r", 5)
+					.attr("fill", "#00A6D6")
+					.on("mouseover", function (event) {
+						// Show tooltip
+						d3.select("#tooltip")
+							.style("visibility", "visible")
+							.html(`${d.axis}: ${d.value}`)
+							.style("left", (event.pageX + 5) + "px")
+							.style("top", (event.pageY - 28) + "px");
+					})
+					.on("mousemove", function (event) {
+						// Move the tooltip with the mouse
+						d3.select("#tooltip")
+							.style("left", (event.pageX + 5) + "px")
+							.style("top", (event.pageY - 28) + "px");
+					})
+					.on("mouseout", function () {
+						d3.select("#tooltip")
+							.style("visibility", "hidden"); // hide tooltip
+					});
+			});
+
+			// tool tip
+			const tooltip = d3.select("body").append("div")
+				.attr("id", "tooltip")
+				.style("position", "absolute")
+				.style("visibility", "hidden")
+				.style("background-color", "#fff")
+				.style("padding", "5px")
+				.style("border-radius", "3px")
+				.style("box-shadow", "0px 0px 10px rgba(0, 0, 0, 0.1)")
+				.style("font-size", "12px")
+				.style("color", "#333");
+		}
+
+
+		/////////// POKEMON INFORMATION DIPSPLAY
+		function displayPokemonInfo(name) {
+			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
+
+			if (!selectedPokemon) {
+				console.error("Pokémon data not found for description.");
+				return;
+			}
+
+			// Show the Pokémon container
+			const container = d3.select("#pokemon-container").style("display", "block");
+
+			// Header: Pokémon name and Pokedex number
+			const header = d3.select("#pokemon-header");
+			header.html(`${selectedPokemon.pokedex_number} - ${selectedPokemon.name}`);
+
+
+			// If height or weight is missing, show "Unknown"
+			const height = selectedPokemon.height_m ? `${selectedPokemon.height_m} m` : "Unknown";
+			const weight = selectedPokemon.weight_kg ? `${selectedPokemon.weight_kg} kg` : "Unknown";
+
+			// Function to convert type text into image elements
+			function getTypeImages(typeString) {
+				if (!typeString) {
+					return `<img src="post-process-data/pokemon_jpg/placeholder.png" 
+					alt="${type}" 
+					style="width: 25px; height: 25px; margin: 2px;">`; // return placeholder
+				}
+
+				return typeString.split(',').map(type =>
+					`<img src="post-process-data/types/${type.trim().toLowerCase()}.png" 
+			  alt="${type}" 
+			  style="width: 25px; height: 25px; margin: 2px;">`
+				).join(" ");
+			}
+
+			// Description Box
+			const description = d3.select("#pokemon-description").style("display", "block");
+			description.html(`
+		<div><strong>Classification:</strong> ${selectedPokemon.classfication}</div>
+		<div><strong>Type(s):</strong> ${getTypeImages(selectedPokemon.type1)} ${selectedPokemon.type2 ? getTypeImages(selectedPokemon.type2) : ''}</div>
+		<div><strong>Height:</strong> ${height}</div>
+		<div><strong>Weight:</strong> ${weight}</div>
+		<div><strong>Effective:</strong> ${getTypeImages(selectedPokemon.effective)}</div>
+		<div><strong>Not Effective:</strong> ${getTypeImages(selectedPokemon.not_effective)}</div>
+	`);
+
+
+		}
+
+
+	</script>
+</body>
+
+</html>
