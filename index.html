@@ -9,20 +9,21 @@
 	<style>
 		body {
 			margin: 0px;
-			font-family: Arial, sans-serif;
+			/* font-family: Arial, sans-serif; */
+			font-family: 'Trebuchet MS', sans-serif;
 			background-color: #B4ACBD;
 			color: #0E0E0E;
 		}
 
 		.big-title {
 			margin: 0px;
-			margin-bottom: 40px;
 			font-size: 32px;
 			text-transform: uppercase;
 
-			color: #B4ACBD;
+			color: #ECE7E7;
+			/* color: #0E0E0E; */
 			text-align: center;
-			background-color: #ECE7E7;
+			background-color: #D53141;
 			padding: 30px;
 
 		}
@@ -45,11 +46,11 @@
 
 		.suggestions {
 			position: absolute;
-			top: 100%;
+			top: 50%;
 			/* Ensures the suggestions appear directly below the input */
 			left: 0;
 			width: 100%;
-			background: white;
+			background: #ECE7E7;
 			max-height: 150px;
 			overflow-y: auto;
 			z-index: 1;
@@ -66,7 +67,7 @@
 		}
 
 		.pokemon-container {
-			width: 400px;
+			width: 350px;
 			margin-top: 20px;
 			padding: 10px;
 			background-color: #D53141;
@@ -94,6 +95,7 @@
 			text-align: center;
 			text-transform: uppercase;
 			margin: 0px;
+			width: 310px;
 			background-color: #0E0E0E;
 			color: white;
 			border: none;
@@ -117,10 +119,10 @@
 		}
 
 		.spider-chart {
-			margin-top: 20px;
-			border: 1px solid #ccc;
-			width: 400px;
-			height: 400px;
+			margin-top: 0px;
+			width: 368px;
+			height: 300px;
+			background-color: #ECE7E7;
 		}
 
 		.tooltip {
@@ -137,7 +139,9 @@
 			display: flex;
 			flex-wrap: wrap;
 			gap: 10px;
+			margin: 0px;
 			margin-top: 10px;
+
 		}
 
 		.legend-item {
@@ -158,11 +162,16 @@
 		.big-container {
 			display: flex;
 			flex-direction: row;
+			justify-content: center;
+			padding: 10px;
 		}
 
 		.scatter-group {
 			display: flex;
 			flex-direction: row;
+			justify-content: center;
+			align-items: center;
+			margin: 0px;
 		}
 
 		.scatter-chart {
@@ -171,21 +180,79 @@
 			margin-right: 0px;
 		}
 
+		.scatter-section {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+		}
+
 		.entry-head {
 			margin: 0px;
 			margin-bottom: -60px;
 		}
 
 		.delete-button {
-			margin-left: 378px;
+			margin-left: 320px;
+			transition: transform 0.5s ease;
+			position: relative;
 		}
 
 		.delete-button:hover {
-			width: 45px;
+			transform: scale(1.2);
+			/* scales to 45px (30px * 1.5) */
 		}
 
 		.big-container {
 			padding: 30px;
+		}
+
+
+		.poke-input {
+			width: 300px;
+			padding: 10px;
+			margin-bottom: 30px;
+			margin-left: 18px;
+			background-color: #ECE7E7;
+			border-radius: 30px;
+		}
+
+		#legend {
+			padding: 30px;
+			background-color: #ECE7E7;
+			margin-right: 10px;
+			width: 100px;
+			height: 340px;
+		}
+
+		.poke-entry {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.scatter-choices {
+			display: flex;
+			gap: 20px;
+			justify-content: center;
+			background-color: #D53141;
+			padding: 20px;
+			color: #ECE7E7;
+			width: 625px;
+			margin-bottom: -10px;
+			margin-top: 70px;
+		}
+
+		#x-select {
+			padding: 3px;
+			width: 180px;
+			text-transform: uppercase;
+		}
+
+		#y-select {
+			padding: 3px;
+			width: 180px;
+			text-transform: uppercase;
 		}
 	</style>
 </head>
@@ -199,26 +266,27 @@
 	<div class="big-container">
 
 		<div class="poke-entry">
-			<!-- SEARCH BAR -->
-			<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-				<input type="text" id="pokemon-input" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
-				<div id="suggestions" class="suggestions"></div>
-			</div>
+			<div class="divder">
+				<!-- SEARCH BAR -->
+				<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
+					<input type="text" id="pokemon-input" class="poke-input" placeholder="Type Pokémon name..."
+						autocomplete="off">
+					<div id="suggestions" class="suggestions"></div>
+				</div>
 
-			<div class="entry-head">
-				<div id="pokemon-header" class="pokemon-header">Pokemon</div>
-				<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
-					style="cursor: pointer; width: 30px; height: 30px;">
-			</div>
+				<div class="entry-head">
+					<div id="pokemon-header" class="pokemon-header">Pokemon</div>
+					<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
+						style="cursor: pointer; width: 30px; height: 30px;">
+				</div>
 
-			<!--ENTRY -->
-			<div id="pokemon-container" class="pokemon-container">
+				<!--ENTRY -->
+				<div id="pokemon-container" class="pokemon-container">
 
-				<div class="img-contain">
 					<img id="pokemon-image" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
 						alt="Pokémon Image">
+					<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
 				</div>
-				<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
 			</div>
 
 			<!-- SPIDER -->
@@ -264,26 +332,31 @@
 
 
 		<div class="poke-entry">
-			<!-- SEARCH BAR -->
-			<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-				<input type="text" id="pokemon-input2" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
-				<div id="suggestions2" class="suggestions"></div>
 
-			</div>
+			<div class="divder">
+				<!-- SEARCH BAR -->
+				<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
 
-			<div class="entry-head">
-				<div id="pokemon-header2" class="pokemon-header">Pokemon</div>
-				<img id="delete-button2" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
-					style="cursor: pointer; width: 30px; height: 30px;">
-			</div>
+					<input type="text" id="pokemon-input2" class="poke-input" placeholder="Type Pokémon name..."
+						autocomplete="off">
 
-			<!--ENTRY -->
-			<div id="pokemon-container2" class="pokemon-container">
-				<div class="img-contain">
+					<div id="suggestions2" class="suggestions"></div>
+
+				</div>
+
+				<div class="entry-head">
+					<div id="pokemon-header2" class="pokemon-header">Pokemon</div>
+					<img id="delete-button2" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
+						style="cursor: pointer; width: 30px; height: 30px;">
+				</div>
+
+				<!--ENTRY -->
+				<div id="pokemon-container2" class="pokemon-container">
 					<img id="pokemon-image2" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
 						alt="Pokémon Image">
+					<div id="pokemon-description2" class="pokemon-description">Start by typing a Pokémon name above.</div>
 				</div>
-				<div id="pokemon-description2" class="pokemon-description">Start by typing a Pokémon name above.</div>
+
 			</div>
 
 			<svg id="spider-chart2" class="spider-chart"></svg>
@@ -449,12 +522,28 @@
 					.join("circle")
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
-					.attr("r", 3)
+					.attr("r", 4)
 					.attr("fill", d => typeColors[d.type1.toLowerCase()] || "gray")
-					.attr("opacity", 0.8)
-					.on("mouseover", (event, d) => tooltip.html(`<strong>${d.name}</strong><br>${xValue}: ${d[xValue]}<br>${yValue}: ${d[yValue]}`).style("visibility", "visible"))
+					.attr("opacity", 0.6)
+					.on("mouseover", function (event, d) {
+						d3.select(this)
+							.transition()
+							.duration(280)
+							.attr("opacity", 1.0)
+							.attr("r", 7);  // bigger circle
+
+						tooltip.html(`<strong>${d.name}</strong><br>${xValue}: ${d[xValue]}<br>${yValue}: ${d[yValue]}`)
+							.style("visibility", "visible");
+					})
 					.on("mousemove", event => tooltip.style("top", event.pageY + 10 + "px").style("left", event.pageX + 10 + "px"))
-					.on("mouseout", () => tooltip.style("visibility", "hidden"));
+					.on("mouseout", function () {
+						d3.select(this)
+							.transition()
+							.duration(150)
+							.attr("r", 4);  // back to original size
+
+						tooltip.style("visibility", "hidden");
+					});
 				// PANEL UPDATES
 				// .on("mouseover", (_, d) => updatePanel(d))
 				// .on("mouseout", () => panelSvg.selectAll("*").remove())
@@ -725,8 +814,8 @@
 
 			chartElement.selectAll("*").remove();
 
-			const width = 400;
-			const height = 400;
+			const width = 368;
+			const height = 300;
 			const maxValue = d3.max(stats, d => d.value);
 			const angleSlice = (Math.PI * 2) / stats.length;
 
@@ -744,8 +833,8 @@
 			svg.append("path")
 				.datum(radarData)
 				.attr("d", radialLine)
-				.attr("fill", "rgba(0, 150, 255, 0.5)") // change
-				.attr("stroke", "#00A6D6")
+				.attr("fill", "rgba(255, 82, 32, 0.8)") // change
+				.attr("stroke", "#F74A27")
 				.attr("stroke-width", 2)
 				.attr("transform", `translate(${width / 2}, ${height / 2})`);
 
@@ -758,7 +847,7 @@
 					.attr("cy", height / 2)
 					.attr("r", radius)
 					.attr("fill", "none")
-					.attr("stroke", "#ccc")
+					.attr("stroke", "#821010")
 					.attr("stroke-dasharray", "4, 2"); // Dashes for circles
 
 			}
@@ -771,7 +860,7 @@
 					.attr("y1", height / 2)
 					.attr("x2", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 40)))
 					.attr("y2", (height / 2) + (Math.sin(angle - Math.PI / 2) * (height / 2 - 40)))
-					.attr("stroke", "#ccc");
+					.attr("stroke", "#821010");
 
 				svg.append("text")
 					.attr("x", (width / 2) + (Math.cos(angle - Math.PI / 2) * (width / 2 - 30)))
@@ -789,7 +878,7 @@
 					.attr("cx", pointX)
 					.attr("cy", pointY)
 					.attr("r", 5)
-					.attr("fill", "#00A6D6")
+					.attr("fill", "#D53141")
 					.on("mouseover", function (event) {
 						// Show tooltip
 						d3.select("#tooltip")
