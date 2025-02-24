@@ -100,72 +100,121 @@
 			width: 400px;
 			height: 400px;
 		}
+
+		.tooltip {
+			position: absolute;
+			visibility: hidden;
+			padding: 8px;
+			background-color: white;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			pointer-events: none;
+		}
+
+		.legend {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 10px;
+		}
+
+		.legend-item {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+		}
+
+		.legend-color {
+			width: 15px;
+			height: 15px;
+			border-radius: 50%;
+			display: inline-block;
+		}
 	</style>
 </head>
 
 <body>
 	<h1>Poké-Compare</h1>
 
-	<div class="section">
-
+	<div class="poke-entry">
+		<!-- SEARCH BAR -->
 		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-			<input type="text" id="pokemon-input" placeholder="Type Pokémon name..." autocomplete="off">
-			<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Delete"
-				style="cursor: pointer; width: 20px; height: 20px;">
+			<input type="text" id="pokemon-input" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
 			<div id="suggestions" class="suggestions"></div>
-
 		</div>
 
-
-
-
-		<!-- Pokémon container with sections for name, image, description, and radar chart -->
-		<!-- Pokémon container with sections for name, image, description, and radar chart -->
+		<!--ENTRY -->
 		<div id="pokemon-container" class="pokemon-container">
-			<!-- Pokémon Header -->
-			<div id="pokemon-header" class="pokemon-header">Enter a Pokémon name to see details</div>
 
-			<!-- Pokémon Image -->
+			<div class="entry-head">
+				<div id="pokemon-header" class="pokemon-header">Enter a Pokémon name to see details</div>
+				<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
+					style="cursor: pointer; width: 20px; height: 20px;">
+			</div>
+
 			<img id="pokemon-image" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
 				alt="Pokémon Image">
-
-			<!-- Pokémon Description -->
 			<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
 		</div>
 
-		<!-- SCATTER -->
-		<div class="scatter-section">
-			<svg id="scatter" class="scatter-chart" width="500" height="400"></svg>
+		<!-- SPIDER -->
+		<svg id="spider-chart" class="spider-chart"></svg>
+	</div>
 
-			<div class="scatter-choices">
-				<label for="x-select">X-Axis:</label>
-				<select id="x-select">
-					<option value="hp">HP</option>
-					<option value="attack">Attack</option>
-					<option value="defense">Defense</option>
-					<option value="sp_attack">Sp. Attack</option>
-					<option value="sp_defense">Sp. Defense</option>
-				</select>
-
-				<label for="y-select">Y-Axis:</label>
-				<select id="y-select">
-					<option value="attack">Attack</option>
-					<option value="hp">HP</option>
-					<option value="defense">Defense</option>
-					<option value="sp_attack">Sp. Attack</option>
-					<option value="sp_defense">Sp. Defense</option>
-				</select>
-			</div>
-
-			<!-- display information of pokemon -->
-			<svg id="pokemon-panel" width="250" height="300"></svg>
+	<div class="poke-entry">
+		<!-- SEARCH BAR -->
+		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
+			<input type="text" id="pokemon-input2" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
+			<div id="suggestions2" class="suggestions"></div>
 
 		</div>
 
-		<svg id="spider-chart" class="spider-chart"></svg>
-		<svg id="bar-chart"></svg>
+		<!--ENTRY -->
+		<div id="pokemon-container2" class="pokemon-container">
+			<div class="entry-head">
+				<div id="pokemon-header2" class="pokemon-header">Enter a Pokémon name to see details</div>
+				<img id="delete-button2" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
+					style="cursor: pointer; width: 20px; height: 20px;">
+			</div>
+			<img id="pokemon-image2" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
+				alt="Pokémon Image">
+			<div id="pokemon-description2" class="pokemon-description">Start by typing a Pokémon name above.</div>
+		</div>
+
+		<svg id="spider-chart2" class="spider-chart"></svg>
+	</div>
+
+
+	<!-- SCATTER -->
+	<div class="scatter-section">
+		<svg id="scatter" class="scatter-chart" width="600" height="500"></svg>
+		<svg id="legend"></svg>
+
+		<div class="scatter-choices">
+			<label for="x-select">X-Axis:</label>
+			<select id="x-select">
+				<option value="hp">HP</option>
+				<option value="attack">Attack</option>
+				<option value="defense">Defense</option>
+				<option value="sp_attack">Sp. Attack</option>
+				<option value="sp_defense">Sp. Defense</option>
+			</select>
+
+			<label for="y-select">Y-Axis:</label>
+			<select id="y-select">
+				<option value="attack">Attack</option>
+				<option value="hp">HP</option>
+				<option value="defense">Defense</option>
+				<option value="sp_attack">Sp. Attack</option>
+				<option value="sp_defense">Sp. Defense</option>
+			</select>
+		</div>
+
+		<!-- <svg id="pokemon-panel" width="250" height="300"></svg> -->
+		<div class="tooltip"></div>
 
 	</div>
+	<svg id="bar-chart"></svg>
 
 	<script>
 
@@ -178,43 +227,102 @@
 			const scatter = d3.select("svg#scatter");
 			const width = scatter.attr("width");
 			const height = scatter.attr("height");
-			const margin = { top: 15, right: 15, bottom: 40, left: 50 };
+			const margin = { top: 40, right: 30, bottom: 50, left: 50 };
 			const chartWidth = width - margin.left - margin.right;
 			const chartHeight = height - margin.top - margin.bottom;
 
-			let annotations = scatter.append("g").attr("id", "annotations");
-			let chartArea = scatter.append("g").attr("id", "points")
-				.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+			let annotations = scatter.append("g")
+				.attr("id", "annotations")
+				.attr("transform", `translate(${margin.left},${margin.top})`);
 
-			const getNiceExtent = (data, key) => d3.extent(data, d => d[key]);
-			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d3.autotype);
+			let chartArea = scatter.append("g")
+				.attr("id", "points")
+				.attr("transform", `translate(${margin.left},${margin.top})`);
+
+			const legendContainer = d3.select("#legend");
+			const tooltip = d3.select(".tooltip");
+
+			const typeColors = {
+				normal: "#A8A77A", fire: "#EE8130", water: "#6390F0", electric: "#F7D02C",
+				grass: "#7AC74C", ice: "#96D9D6", fighting: "#C22E28", poison: "#A33EA1",
+				ground: "#E2BF65", flying: "#A98FF3", psychic: "#F95587", bug: "#A6B91A",
+				rock: "#B6A136", ghost: "#735797", dragon: "#6F35FC", dark: "#705746",
+				steel: "#B7B7CE", fairy: "#D685AD"
+			};
+
+			let dat = await d3.csv("post-process-data/pokemon_dataset.csv", d => ({
+				name: d.name,
+				classification: d.classification,
+				type1: d.type1.toLowerCase(),
+				hp: +d.hp,
+				attack: +d.attack,
+				defense: +d.defense,
+				sp_attack: +d.sp_attack,
+				sp_defense: +d.sp_defense,
+				speed: +d.speed
+			}));
+
 			const xSelect = d3.select("#x-select");
 			const ySelect = d3.select("#y-select");
 
-			// PANEL SELECTION
-			const panelSvg = d3.select("#pokemon-panel");
-			function updatePanel(row) {
-				panelSvg.selectAll("*").remove();
+			// LEGEND
+			function createLegend() {
+				legendContainer.selectAll("*").remove(); // clear legend
 
-				let entries = Object.entries(row);
+				const legendItemSize = 15;
+				const spacing = 5;
 
-				panelSvg.append("text")
-					.attr("x", 10)
-					.attr("y", 20)
-					.attr("font-size", "16px")
-					.attr("font-weight", "bold")
-					.text(row.name || "Pokémon Details");
+				const entries = Object.entries(typeColors);
 
-				entries.forEach(([key, value], i) => {
-					if (key !== "name") {
-						panelSvg.append("text")
-							.attr("x", 10)
-							.attr("y", 40 + i * 20)
-							.attr("font-size", "12px")
-							.text(`${key}: ${value}`);
-					}
-				});
+				const legend = legendContainer
+					.attr("width", 150)
+					.attr("height", entries.length * (legendItemSize + spacing));
+
+				const legendItems = legend.selectAll(".legend-item")
+					.data(entries)
+					.join("g")
+					.attr("class", "legend-item")
+					.attr("transform", (_, i) => `translate(5,${i * (legendItemSize + spacing)})`);
+
+				legendItems.append("rect")
+					.attr("width", legendItemSize)
+					.attr("height", legendItemSize)
+					.attr("fill", d => d[1]);
+
+				legendItems.append("text")
+					.attr("x", legendItemSize + spacing)
+					.attr("y", legendItemSize / 2)
+					.attr("alignment-baseline", "middle")
+					.attr("font-size", "12px")
+					.text(d => d[0]);
 			}
+
+
+			// PANEL SELECTION (keeping as an alt design choice)
+			// const panelSvg = d3.select("#pokemon-panel");
+			// function updatePanel(row) {
+			// 	panelSvg.selectAll("*").remove();
+
+			// 	panelSvg.append("text")
+			// 		.attr("x", 10)
+			// 		.attr("y", 25)
+			// 		.attr("font-size", "16px")
+			// 		.attr("font-weight", "bold")
+			// 		.text(row.name || "Pokémon Details");
+
+			// 	panelSvg.append("text")
+			// 		.attr("x", 10)
+			// 		.attr("y", 45)
+			// 		.attr("font-style", "italic")
+			// 		.text(row.classfication);
+
+			// 	["type1", "hp", "attack", "defense", "sp_attack", "sp_defense", "speed"].forEach((attr, i) => {
+			// 		panelSvg.append("text")
+			// 			.attr("x", 10)
+			// 			.attr("y", 65 + i * 20)
+			// 			.text(`${attr.toUpperCase()}: ${row[attr]}`);
+			// 	});
+			// }
 
 			function updateScatter() {
 				const xValue = xSelect.property("value");
@@ -224,47 +332,61 @@
 				chartArea.selectAll("*").remove();
 				annotations.selectAll("*").remove();
 
+				// debug
+				// console.log(d3.max(dat, d => d[xValue]))
+				// console.log(d3.max(dat, d => d[yValue]))
+
 				const xScale = d3.scaleLinear()
-					.domain(getNiceExtent(dat, xValue)).nice()
+					.domain([0, d3.max(dat, d => d[xValue])])
 					.range([0, chartWidth]);
 
 				const yScale = d3.scaleLinear()
-					.domain(getNiceExtent(dat, yValue)).nice()
+					.domain([0, d3.max(dat, d => d[yValue])])
 					.range([chartHeight, 0]);
 
-				annotations.append("g")
-					.attr("transform", `translate(${margin.left},${chartHeight + margin.top})`)
-					.call(d3.axisBottom(xScale))
-					.append("text")
-					.attr("x", chartWidth / 2)
-					.attr("y", 35)
-					.attr("fill", "black")
-					.attr("text-anchor", "middle")
-					.text(xValue);
+				const xAxis = d3.axisBottom(xScale);
+				const yAxis = d3.axisLeft(yScale);
+
 
 				annotations.append("g")
-					.attr("transform", `translate(${margin.left},${margin.top})`)
-					.call(d3.axisLeft(yScale))
+					.attr("transform", `translate(0,${chartHeight})`)
+					.call(xAxis)
+					.append("text")
+					.attr("x", chartWidth / 2)
+					.attr("y", 40)
+					.attr("fill", "black")
+					.attr("text-anchor", "middle")
+					.text(xValue.toUpperCase());
+
+				annotations.append("g")
+					.call(yAxis)
 					.append("text")
 					.attr("transform", "rotate(-90)")
 					.attr("x", -chartHeight / 2)
-					.attr("y", -35)
+					.attr("y", -40)
 					.attr("fill", "black")
 					.attr("text-anchor", "middle")
-					.text(yValue);
+					.text(yValue.toUpperCase());
 
 				chartArea.selectAll("circle")
 					.data(dat)
 					.join("circle")
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
-					.attr("r", 4)
-					.attr("fill", "steelblue")
-					.attr("opacity", 0.7)
-					.on("click", (event, d) => updatePanel(d));
+					.attr("r", 5)
+					.attr("fill", d => typeColors[d.type1.toLowerCase()] || "gray")
+					.attr("opacity", 0.8)
+					.on("mouseover", (event, d) => tooltip.html(`<strong>${d.name}</strong><br>${xValue}: ${d[xValue]}<br>${yValue}: ${d[yValue]}`).style("visibility", "visible"))
+					.on("mousemove", event => tooltip.style("top", event.pageY + 10 + "px").style("left", event.pageX + 10 + "px"))
+					.on("mouseout", () => tooltip.style("visibility", "hidden"));
+				// PANEL UPDATES
+				// .on("mouseover", (_, d) => updatePanel(d))
+				// .on("mouseout", () => panelSvg.selectAll("*").remove())
+				// .on("click", (_, d) => updatePanel(d));
+
 
 			}
-
+			createLegend();
 			updateScatter();
 			xSelect.on("change", updateScatter);
 			ySelect.on("change", updateScatter);
@@ -276,6 +398,7 @@
 		generateScatter();
 
 
+		/////// BAR CHART
 		function generateBarChart(pokemon1, pokemon2) {
 			const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon1.toLowerCase());
 			const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon2.toLowerCase());
@@ -428,62 +551,83 @@
 				.attr("alignment-baseline", "middle");
 		}
 
-		// Load Pokémon names and numbers from CSV and set up autocomplete
+
+
+		///// POKEDEX ENTRY
 		d3.csv("post-process-data/pokemon_dataset.csv").then(function (data) {
 			pokemonData = data;
 			const pokemonNames = data.map(d => d.name);
 
-			const input = d3.select("#pokemon-input");
-			const suggestions = d3.select("#suggestions");
+			// Select all entries
+			d3.selectAll(".poke-entry").each(function () {
+				const entry = d3.select(this);
 
-			input.on("input", function () {
-				const value = this.value.toLowerCase();
-				suggestions.html("");
+				// Elements within this entry
+				const input = entry.select(".poke-input");
+				const suggestions = entry.select(".suggestions");
+				const deleteButton = entry.select(".delete-button");
+				const header = entry.select(".pokemon-header");
+				const image = entry.select(".pokemon-image");
+				const description = entry.select(".pokemon-description");
+				const spiderChart = entry.select(".spider-chart");
 
-				if (value) {
-					const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
-					filteredNames.forEach(name => {
-						suggestions.append("div")
-							.attr("class", "suggestion-item")
-							.text(name)
-							.on("click", function () {
-								input.property("value", name);
-								suggestions.html("");
-								loadPokemonImage(name);
-								generateSpiderChart(name);
-								displayPokemonInfo(name);
+				input.on("input", function () {
+					const value = this.value.toLowerCase();
+					suggestions.html("");
 
-							});
-					});
-				}
+					if (value) {
+						const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
+						filteredNames.forEach(name => {
+							suggestions.append("div")
+								.attr("class", "suggestion-item")
+								.text(name)
+								.on("click", function () {
+									input.property("value", name);
+									suggestions.html("");
+									loadPokemonImage(name, image);
+									generateSpiderChart(name, spiderChart);
+									displayPokemonInfo(name, header, description);
+								});
+						});
+					}
+				});
+
+				////// DELETE BUTTON FUNCTIONALITY
+				deleteButton.on("click", function () {
+					input.property("value", "");
+					header.html("Enter a Pokémon name to see details");
+					image.attr("src", "post-process-data/pokemon_jpg/placeholder.png").style("display", "none");
+					description.html("Start by typing a Pokémon name above.");
+					spiderChart.selectAll("*").remove();
+				});
 			});
-			generateBarChart("Bulbasaur", "Squirtle");
 		});
 
-		// Add the event listener for the delete button
-		// Add the event listener for the delete button
-		d3.select("#delete-button").on("click", function () {
 
-			// RESET
-			d3.select("#pokemon-input").property("value", "");
-			d3.select("#pokemon-header").html("Enter a Pokémon name to see details");
-			d3.select("#pokemon-image").style("display", "none");
-			d3.select("#pokemon-description").html("Start by typing a Pokémon name above.");
+		////// OLD DELETE FUNCTION SAVE
+		// function resetPokemonDetails() {
+		// 	// RESET
+		// 	d3.select(".pokemon-input").property("value", "");
+		// 	d3.select(".pokemon-header").html("Enter a Pokémon name to see details");
+		// 	d3.select(".pokemon-image").style("display", "none");
+		// 	d3.select(".pokemon-description").html("Start by typing a Pokémon name above.");
 
-			// CLEAR SPIDER
-			d3.select("#spider-chart").selectAll("*").remove();
-		});
+		// 	// CLEAR SPIDER
+		// 	d3.select(".spider-chart").selectAll("*").remove();
+		// }
+		// // event listeners
+		// d3.select("#delete-button").on("click", resetPokemonDetails);
+		// d3.select("#delete-button2").on("click", resetPokemonDetails);
 
 
 
 		//////////// POKEMON IMAQGE
-		function loadPokemonImage(name) {
+		function loadPokemonImage(name, image) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
 			if (selectedPokemon) {
 				const pokedexNumber = selectedPokemon.pokedex_number;
 				const imageUrl = `post-process-data/pokemon_jpg/${pokedexNumber}.png`;
-				const image = d3.select("#pokemon-image");
 				image.attr("src", imageUrl).style("display", "block");
 			} else {
 				console.error("Pokémon not found");
@@ -491,13 +635,8 @@
 		}
 
 		/////// SPIDER CHART
-		function generateSpiderChart(name) {
+		function generateSpiderChart(name, chartElement) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
-
-			if (!selectedPokemon) {
-				console.error("Pokémon not found for spider chart.");
-				return;
-			}
 
 			const stats = [
 				{ axis: "HP", value: +selectedPokemon.hp },
@@ -508,29 +647,28 @@
 				{ axis: "Speed", value: +selectedPokemon.speed }
 			];
 
-			d3.select("#spider-chart").selectAll("*").remove();
+			chartElement.selectAll("*").remove();
 
 			const width = 400;
 			const height = 400;
 			const maxValue = d3.max(stats, d => d.value);
 			const angleSlice = (Math.PI * 2) / stats.length;
 
-			const svg = d3.select("#spider-chart")
+			const svg = d3.select(".spider-chart")
 				.attr("width", width)
 				.attr("height", height)
-				.style("background-color", "#f5f5dc"); // Set cream white background
 
-			// Create the radial lines
+
 			const radialLine = d3.lineRadial()
 				.angle((d, i) => i * angleSlice)
 				.radius(d => (d.value / maxValue) * (width / 2 - 40));
 
-			const radarData = stats.concat(stats[0]); // Close the loop for the radar chart
+			const radarData = stats.concat(stats[0]);
 
 			svg.append("path")
 				.datum(radarData)
 				.attr("d", radialLine)
-				.attr("fill", "rgba(0, 150, 255, 0.5)")
+				.attr("fill", "rgba(0, 150, 255, 0.5)") // change
 				.attr("stroke", "#00A6D6")
 				.attr("stroke-width", 2)
 				.attr("transform", `translate(${width / 2}, ${height / 2})`);
@@ -611,7 +749,7 @@
 
 
 		/////////// POKEMON INFORMATION DIPSPLAY
-		function displayPokemonInfo(name) {
+		function displayPokemonInfo(name, header, description) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
 			if (!selectedPokemon) {
@@ -619,36 +757,44 @@
 				return;
 			}
 
-			// Show the Pokémon container
-			const container = d3.select("#pokemon-container").style("display", "block");
-
-			// Header: Pokémon name and Pokedex number
-			const header = d3.select("#pokemon-header");
 			header.html(`${selectedPokemon.pokedex_number} - ${selectedPokemon.name}`);
 
-
-			// If height or weight is missing, show "Unknown"
 			const height = selectedPokemon.height_m ? `${selectedPokemon.height_m} m` : "Unknown";
 			const weight = selectedPokemon.weight_kg ? `${selectedPokemon.weight_kg} kg` : "Unknown";
 
-			// Function to convert type text into image elements
-			function getTypeImages(typeString) {
-				if (!typeString) {
-					return `<img src="post-process-data/pokemon_jpg/placeholder.png" 
+			description.html(`
+        <div><strong>Classification:</strong> ${selectedPokemon.classfication}</div>
+        <div><strong>Type(s):</strong> ${selectedPokemon.type1}${selectedPokemon.type2 ? ', ' + selectedPokemon.type2 : ''}</div>
+        <div><strong>Height:</strong> ${height}</div>
+        <div><strong>Weight:</strong> ${weight}</div>
+				<div><strong>Effective:</strong> ${getTypeImages(selectedPokemon.effective)}</div>
+				<div><strong>Not Effective:</strong> ${getTypeImages(selectedPokemon.not_effective)}</div>
+    `);
+		}
+
+
+		// Function to convert type text into image elements
+		function getTypeImages(typeString) {
+			if (typeString == "") {
+				return "None";
+			}
+			if (!typeString) {
+				return `<img src="post-process-data/pokemon_jpg/placeholder.png" 
 					alt="${type}" 
 					style="width: 25px; height: 25px; margin: 2px;">`; // return placeholder
-				}
-
-				return typeString.split(',').map(type =>
-					`<img src="post-process-data/types/${type.trim().toLowerCase()}.png" 
-			  alt="${type}" 
-			  style="width: 25px; height: 25px; margin: 2px;">`
-				).join(" ");
 			}
 
-			// Description Box
-			const description = d3.select("#pokemon-description").style("display", "block");
-			description.html(`
+			return typeString.split(',').map(type =>
+				`<img src="post-process-data/types/${type.trim().toLowerCase()}.png" 
+			  alt="${type}" 
+			  style="width: 25px; height: 25px; margin: 2px;">`
+			).join(" ");
+		}
+
+		// Description Box
+		const description = d3.select(".pokemon-description").style("display", "block");
+		console.log("do u come here?")
+		description.html(`
 		<div><strong>Classification:</strong> ${selectedPokemon.classfication}</div>
 		<div><strong>Type(s):</strong> ${getTypeImages(selectedPokemon.type1)} ${selectedPokemon.type2 ? getTypeImages(selectedPokemon.type2) : ''}</div>
 		<div><strong>Height:</strong> ${height}</div>
@@ -656,9 +802,6 @@
 		<div><strong>Effective:</strong> ${getTypeImages(selectedPokemon.effective)}</div>
 		<div><strong>Not Effective:</strong> ${getTypeImages(selectedPokemon.not_effective)}</div>
 	`);
-
-
-		}
 
 
 	</script>
