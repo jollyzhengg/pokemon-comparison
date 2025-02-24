@@ -139,15 +139,19 @@
 	<div class="poke-entry">
 		<!-- SEARCH BAR -->
 		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-			<input type="text" id="pokemon-input" placeholder="Type Pokémon name..." autocomplete="off">
-			<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Delete"
-				style="cursor: pointer; width: 20px; height: 20px;">
+			<input type="text" id="pokemon-input" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
 			<div id="suggestions" class="suggestions"></div>
 		</div>
 
 		<!--ENTRY -->
 		<div id="pokemon-container" class="pokemon-container">
-			<div id="pokemon-header" class="pokemon-header">Enter a Pokémon name to see details</div>
+
+			<div class="entry-head">
+				<div id="pokemon-header" class="pokemon-header">Enter a Pokémon name to see details</div>
+				<img id="delete-button" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
+					style="cursor: pointer; width: 20px; height: 20px;">
+			</div>
+
 			<img id="pokemon-image" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
 				alt="Pokémon Image">
 			<div id="pokemon-description" class="pokemon-description">Start by typing a Pokémon name above.</div>
@@ -160,16 +164,18 @@
 	<div class="poke-entry">
 		<!-- SEARCH BAR -->
 		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
-			<input type="text" id="pokemon-input2" placeholder="Type Pokémon name..." autocomplete="off">
-			<img id="delete-button2" class="delete-button" src="additional-assets/cancel.svg" alt="Delete"
-				style="cursor: pointer; width: 20px; height: 20px;">
+			<input type="text" id="pokemon-input2" class="poke-input" placeholder="Type Pokémon name..." autocomplete="off">
 			<div id="suggestions2" class="suggestions"></div>
 
 		</div>
 
 		<!--ENTRY -->
 		<div id="pokemon-container2" class="pokemon-container">
-			<div id="pokemon-header2" class="pokemon-header">Enter a Pokémon name to see details</div>
+			<div class="entry-head">
+				<div id="pokemon-header2" class="pokemon-header">Enter a Pokémon name to see details</div>
+				<img id="delete-button2" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
+					style="cursor: pointer; width: 20px; height: 20px;">
+			</div>
 			<img id="pokemon-image2" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
 				alt="Pokémon Image">
 			<div id="pokemon-description2" class="pokemon-description">Start by typing a Pokémon name above.</div>
@@ -391,6 +397,8 @@
 		// scatter is always displayed on default
 		generateScatter();
 
+
+		/////// BAR CHART
 		function generateBarChart(pokemon1, pokemon2) {
 			const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon1.toLowerCase());
 			const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokemon2.toLowerCase());
@@ -543,62 +551,83 @@
 				.attr("alignment-baseline", "middle");
 		}
 
-		// Load Pokémon names and numbers from CSV and set up autocomplete
+
+
+		///// POKEDEX ENTRY
 		d3.csv("post-process-data/pokemon_dataset.csv").then(function (data) {
 			pokemonData = data;
 			const pokemonNames = data.map(d => d.name);
 
-			const input = d3.select("#pokemon-input");
-			const suggestions = d3.select("#suggestions");
+			// Select all entries
+			d3.selectAll(".poke-entry").each(function () {
+				const entry = d3.select(this);
 
-			input.on("input", function () {
-				const value = this.value.toLowerCase();
-				suggestions.html("");
+				// Elements within this entry
+				const input = entry.select(".poke-input");
+				const suggestions = entry.select(".suggestions");
+				const deleteButton = entry.select(".delete-button");
+				const header = entry.select(".pokemon-header");
+				const image = entry.select(".pokemon-image");
+				const description = entry.select(".pokemon-description");
+				const spiderChart = entry.select(".spider-chart");
 
-				if (value) {
-					const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
-					filteredNames.forEach(name => {
-						suggestions.append("div")
-							.attr("class", "suggestion-item")
-							.text(name)
-							.on("click", function () {
-								input.property("value", name);
-								suggestions.html("");
-								loadPokemonImage(name);
-								generateSpiderChart(name);
-								displayPokemonInfo(name);
-								generateBarChart(name, "Squirtle");
+				input.on("input", function () {
+					const value = this.value.toLowerCase();
+					suggestions.html("");
 
-							});
-					});
-				}
+					if (value) {
+						const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
+						filteredNames.forEach(name => {
+							suggestions.append("div")
+								.attr("class", "suggestion-item")
+								.text(name)
+								.on("click", function () {
+									input.property("value", name);
+									suggestions.html("");
+									loadPokemonImage(name, image);
+									generateSpiderChart(name, spiderChart);
+									displayPokemonInfo(name, header, description);
+								});
+						});
+					}
+				});
+
+				////// DELETE BUTTON FUNCTIONALITY
+				deleteButton.on("click", function () {
+					input.property("value", "");
+					header.html("Enter a Pokémon name to see details");
+					image.attr("src", "post-process-data/pokemon_jpg/placeholder.png").style("display", "none");
+					description.html("Start by typing a Pokémon name above.");
+					spiderChart.selectAll("*").remove();
+				});
 			});
 		});
 
-		// Add the event listener for the delete button
-		// Add the event listener for the delete button
-		d3.select("#delete-button").on("click", function () {
 
-			// RESET
-			d3.select("#pokemon-input").property("value", "");
-			d3.select("#pokemon-header").html("Enter a Pokémon name to see details");
-			d3.select("#pokemon-image").style("display", "none");
-			d3.select("#pokemon-description").html("Start by typing a Pokémon name above.");
+		////// OLD DELETE FUNCTION SAVE
+		// function resetPokemonDetails() {
+		// 	// RESET
+		// 	d3.select(".pokemon-input").property("value", "");
+		// 	d3.select(".pokemon-header").html("Enter a Pokémon name to see details");
+		// 	d3.select(".pokemon-image").style("display", "none");
+		// 	d3.select(".pokemon-description").html("Start by typing a Pokémon name above.");
 
-			// CLEAR SPIDER
-			d3.select("#spider-chart").selectAll("*").remove();
-		});
+		// 	// CLEAR SPIDER
+		// 	d3.select(".spider-chart").selectAll("*").remove();
+		// }
+		// // event listeners
+		// d3.select("#delete-button").on("click", resetPokemonDetails);
+		// d3.select("#delete-button2").on("click", resetPokemonDetails);
 
 
 
 		//////////// POKEMON IMAQGE
-		function loadPokemonImage(name) {
+		function loadPokemonImage(name, image) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
 			if (selectedPokemon) {
 				const pokedexNumber = selectedPokemon.pokedex_number;
 				const imageUrl = `post-process-data/pokemon_jpg/${pokedexNumber}.png`;
-				const image = d3.select("#pokemon-image");
 				image.attr("src", imageUrl).style("display", "block");
 			} else {
 				console.error("Pokémon not found");
@@ -606,13 +635,8 @@
 		}
 
 		/////// SPIDER CHART
-		function generateSpiderChart(name) {
+		function generateSpiderChart(name, chartElement) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
-
-			if (!selectedPokemon) {
-				console.error("Pokémon not found for spider chart.");
-				return;
-			}
 
 			const stats = [
 				{ axis: "HP", value: +selectedPokemon.hp },
@@ -623,29 +647,28 @@
 				{ axis: "Speed", value: +selectedPokemon.speed }
 			];
 
-			d3.select("#spider-chart").selectAll("*").remove();
+			chartElement.selectAll("*").remove();
 
 			const width = 400;
 			const height = 400;
-
+			const maxValue = d3.max(stats, d => d.value);
 			const angleSlice = (Math.PI * 2) / stats.length;
 
-			const svg = d3.select("#spider-chart")
+			const svg = d3.select(".spider-chart")
 				.attr("width", width)
 				.attr("height", height)
-				.style("background-color", "#f5f5dc"); // Set cream white background
 
-			// Create the radial lines
+
 			const radialLine = d3.lineRadial()
 				.angle((d, i) => i * angleSlice)
-				.radius(d => (d.value / maxNum) * (width / 2 - 40));
+				.radius(d => (d.value / maxValue) * (width / 2 - 40));
 
-			const radarData = stats.concat(stats[0]); // Close the loop for the radar chart
+			const radarData = stats.concat(stats[0]);
 
 			svg.append("path")
 				.datum(radarData)
 				.attr("d", radialLine)
-				.attr("fill", "rgba(0, 150, 255, 0.5)")
+				.attr("fill", "rgba(0, 150, 255, 0.5)") // change
 				.attr("stroke", "#00A6D6")
 				.attr("stroke-width", 2)
 				.attr("transform", `translate(${width / 2}, ${height / 2})`);
@@ -682,8 +705,8 @@
 					.attr("text-anchor", "middle");
 
 				// Add points to the edges
-				const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxNum) * (width / 2 - 40));
-				const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxNum) * (height / 2 - 40));
+				const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxValue) * (width / 2 - 40));
+				const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxValue) * (height / 2 - 40));
 
 				// Add interactivity (hover effects)
 				svg.append("circle")
@@ -726,7 +749,7 @@
 
 
 		/////////// POKEMON INFORMATION DIPSPLAY
-		function displayPokemonInfo(name) {
+		function displayPokemonInfo(name, header, description) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
 			if (!selectedPokemon) {
@@ -734,39 +757,41 @@
 				return;
 			}
 
-			// Show the Pokémon container
-			const container = d3.select("#pokemon-container").style("display", "block");
-
-			// Header: Pokémon name and Pokedex number
-			const header = d3.select("#pokemon-header");
 			header.html(`${selectedPokemon.pokedex_number} - ${selectedPokemon.name}`);
 
-
-			// If height or weight is missing, show "Unknown"
 			const height = selectedPokemon.height_m ? `${selectedPokemon.height_m} m` : "Unknown";
 			const weight = selectedPokemon.weight_kg ? `${selectedPokemon.weight_kg} kg` : "Unknown";
 
-			// Function to convert type text into image elements
-			function getTypeImages(typeString) {
-				if (typeString == "") {
-					return "None";
-				}
-				if (!typeString) {
-					return `<img src="post-process-data/pokemon_jpg/placeholder.png" 
+			description.html(`
+        <div><strong>Classification:</strong> ${selectedPokemon.classfication}</div>
+        <div><strong>Type(s):</strong> ${selectedPokemon.type1}${selectedPokemon.type2 ? ', ' + selectedPokemon.type2 : ''}</div>
+        <div><strong>Height:</strong> ${height}</div>
+        <div><strong>Weight:</strong> ${weight}</div>
+    `);
+		}
+
+
+		// Function to convert type text into image elements
+		function getTypeImages(typeString) {
+			if (typeString == "") {
+				return "None";
+			}
+			if (!typeString) {
+				return `<img src="post-process-data/pokemon_jpg/placeholder.png" 
 					alt="${type}" 
 					style="width: 25px; height: 25px; margin: 2px;">`; // return placeholder
-				}
-
-				return typeString.split(',').map(type =>
-					`<img src="post-process-data/types/${type.trim().toLowerCase()}.png" 
-			  alt="${type}" 
-			  style="width: 25px; height: 25px; margin: 2px;">`
-				).join(" ");
 			}
 
-			// Description Box
-			const description = d3.select("#pokemon-description").style("display", "block");
-			description.html(`
+			return typeString.split(',').map(type =>
+				`<img src="post-process-data/types/${type.trim().toLowerCase()}.png" 
+			  alt="${type}" 
+			  style="width: 25px; height: 25px; margin: 2px;">`
+			).join(" ");
+		}
+
+		// Description Box
+		const description = d3.select(".pokemon-description").style("display", "block");
+		description.html(`
 		<div><strong>Classification:</strong> ${selectedPokemon.classfication}</div>
 		<div><strong>Type(s):</strong> ${getTypeImages(selectedPokemon.type1)} ${selectedPokemon.type2 ? getTypeImages(selectedPokemon.type2) : ''}</div>
 		<div><strong>Height:</strong> ${height}</div>
@@ -776,7 +801,7 @@
 	`);
 
 
-		}
+
 
 
 	</script>
