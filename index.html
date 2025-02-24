@@ -111,6 +111,25 @@
 			pointer-events: none;
 		}
 
+		.legend {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 10px;
+			margin-top: 10px;
+		}
+
+		.legend-item {
+			display: flex;
+			align-items: center;
+			gap: 5px;
+		}
+
+		.legend-color {
+			width: 15px;
+			height: 15px;
+			border-radius: 50%;
+			display: inline-block;
+		}
 	</style>
 </head>
 
@@ -168,7 +187,7 @@
 				</select>
 			</div>
 
-			<!-- display information of pokemon -->
+			<svg id="legend"></svg>
 			<!-- <svg id="pokemon-panel" width="250" height="300"></svg> -->
 			<div class="tooltip"></div>
 
@@ -216,13 +235,36 @@
 
 			// LEGEND
 			function createLegend() {
-				legendContainer.html("");
-				Object.entries(typeColors).forEach(([type, color]) => {
-					legendContainer.append("div")
-						.attr("class", "legend-item")
-						.html(`<span style="display:inline-block;width:12px;height:12px;background:${color};margin-right:6px;"></span>${type}`);
-				});
+				legendContainer.selectAll("*").remove(); // clear legend
+
+				const legendItemSize = 15;
+				const spacing = 5;
+
+				const entries = Object.entries(typeColors);
+
+				const legend = legendContainer
+					.attr("width", 150)
+					.attr("height", entries.length * (legendItemSize + spacing));
+
+				const legendItems = legend.selectAll(".legend-item")
+					.data(entries)
+					.join("g")
+					.attr("class", "legend-item")
+					.attr("transform", (_, i) => `translate(5,${i * (legendItemSize + spacing)})`);
+
+				legendItems.append("rect")
+					.attr("width", legendItemSize)
+					.attr("height", legendItemSize)
+					.attr("fill", d => d[1]);
+
+				legendItems.append("text")
+					.attr("x", legendItemSize + spacing)
+					.attr("y", legendItemSize / 2)
+					.attr("alignment-baseline", "middle")
+					.attr("font-size", "12px")
+					.text(d => d[0]);
 			}
+
 
 			// PANEL SELECTION (keeping as an alt design choice)
 			// const panelSvg = d3.select("#pokemon-panel");
