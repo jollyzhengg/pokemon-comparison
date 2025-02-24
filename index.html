@@ -555,12 +555,12 @@
 								loadPokemonImage(name);
 								generateSpiderChart(name);
 								displayPokemonInfo(name);
+								generateBarChart(name, "Squirtle");
 
 							});
 					});
 				}
 			});
-			generateBarChart("Bulbasaur", "Squirtle");
 		});
 
 		// Add the event listener for the delete button
@@ -736,6 +736,9 @@
 
 			// Function to convert type text into image elements
 			function getTypeImages(typeString) {
+				if (typeString == ""){
+					return "None";
+				}
 				if (!typeString) {
 					return `<img src="post-process-data/pokemon_jpg/placeholder.png" 
 					alt="${type}" 
