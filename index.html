@@ -134,7 +134,10 @@
 </head>
 
 <body>
-	<h1>Poké-Compare</h1>
+	<div class="big-title">
+		<h1>Poké-Compare</h1>
+	</div>
+
 
 	<div class="poke-entry">
 		<!-- SEARCH BAR -->
@@ -161,6 +164,41 @@
 		<svg id="spider-chart" class="spider-chart"></svg>
 	</div>
 
+	<div class="middle">
+
+		<!-- SCATTER -->
+		<div class="scatter-section">
+			<svg id="scatter" class="scatter-chart" width="600" height="500"></svg>
+			<svg id="legend"></svg>
+
+			<div class="scatter-choices">
+				<label for="x-select">X-Axis:</label>
+				<select id="x-select">
+					<option value="hp">HP</option>
+					<option value="attack">Attack</option>
+					<option value="defense">Defense</option>
+					<option value="sp_attack">Sp. Attack</option>
+					<option value="sp_defense">Sp. Defense</option>
+				</select>
+
+				<label for="y-select">Y-Axis:</label>
+				<select id="y-select">
+					<option value="attack">Attack</option>
+					<option value="hp">HP</option>
+					<option value="defense">Defense</option>
+					<option value="sp_attack">Sp. Attack</option>
+					<option value="sp_defense">Sp. Defense</option>
+				</select>
+			</div>
+
+			<!-- <svg id="pokemon-panel" width="250" height="300"></svg> -->
+			<div class="tooltip"></div>
+
+		</div>
+		<svg id="bar-chart"></svg>
+	</div>
+
+
 	<div class="poke-entry">
 		<!-- SEARCH BAR -->
 		<div class="pokemon-selection" style="display: flex; align-items: center; gap: 10px;">
@@ -185,36 +223,6 @@
 	</div>
 
 
-	<!-- SCATTER -->
-	<div class="scatter-section">
-		<svg id="scatter" class="scatter-chart" width="600" height="500"></svg>
-		<svg id="legend"></svg>
-
-		<div class="scatter-choices">
-			<label for="x-select">X-Axis:</label>
-			<select id="x-select">
-				<option value="hp">HP</option>
-				<option value="attack">Attack</option>
-				<option value="defense">Defense</option>
-				<option value="sp_attack">Sp. Attack</option>
-				<option value="sp_defense">Sp. Defense</option>
-			</select>
-
-			<label for="y-select">Y-Axis:</label>
-			<select id="y-select">
-				<option value="attack">Attack</option>
-				<option value="hp">HP</option>
-				<option value="defense">Defense</option>
-				<option value="sp_attack">Sp. Attack</option>
-				<option value="sp_defense">Sp. Defense</option>
-			</select>
-		</div>
-
-		<!-- <svg id="pokemon-panel" width="250" height="300"></svg> -->
-		<div class="tooltip"></div>
-
-	</div>
-	<svg id="bar-chart"></svg>
 
 	<script>
 
