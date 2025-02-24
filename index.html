@@ -314,8 +314,9 @@
 				chartArea.selectAll("*").remove();
 				annotations.selectAll("*").remove();
 
-				console.log(d3.max(dat, d => d[xValue]))
-				console.log(d3.max(dat, d => d[yValue]))
+				// debug
+				// console.log(d3.max(dat, d => d[xValue]))
+				// console.log(d3.max(dat, d => d[yValue]))
 
 				const xScale = d3.scaleLinear()
 					.domain([0, d3.max(dat, d => d[xValue])])
