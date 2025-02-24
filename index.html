@@ -551,9 +551,74 @@
 				.attr("alignment-baseline", "middle");
 		}
 
+		function findMaxValueSpiderChart(pokename1, pokename2){
+            if (pokename1 == "" & pokename2 == ""){
+                return 0;
+            } else if (pokename2 == ""){
+                const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokename1.toLowerCase());
+                const stats1 = [
+                    { axis: "HP", value: +selectedPokemon1.hp },
+                    { axis: "Attack", value: +selectedPokemon1.attack },
+                    { axis: "Defense", value: +selectedPokemon1.defense },
+                    { axis: "Sp. Attack", value: +selectedPokemon1.sp_attack },
+                    { axis: "Sp. Defense", value: +selectedPokemon1.sp_defense },
+                    { axis: "Speed", value: +selectedPokemon1.speed }
+                ];
+                const maxValue1 = d3.max(stats1, d => d.value);
+                return maxValue1;
+            } else if (pokename2 == ""){
+                const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokename2.toLowerCase());
+
+                const stats2 = [
+                    { axis: "HP", value: +selectedPokemon2.hp },
+                    { axis: "Attack", value: +selectedPokemon2.attack },
+                    { axis: "Defense", value: +selectedPokemon2.defense },
+                    { axis: "Sp. Attack", value: +selectedPokemon2.sp_attack },
+                    { axis: "Sp. Defense", value: +selectedPokemon2.sp_defense },
+                    { axis: "Speed", value: +selectedPokemon2.speed }
+                ];
+
+			    const maxValue2 = d3.max(stats2, d => d.value);
+                return maxValue2;
+
+            } else{
+                const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokename1.toLowerCase());
+                const stats1 = [
+                    { axis: "HP", value: +selectedPokemon1.hp },
+                    { axis: "Attack", value: +selectedPokemon1.attack },
+                    { axis: "Defense", value: +selectedPokemon1.defense },
+                    { axis: "Sp. Attack", value: +selectedPokemon1.sp_attack },
+                    { axis: "Sp. Defense", value: +selectedPokemon1.sp_defense },
+                    { axis: "Speed", value: +selectedPokemon1.speed }
+                ];
+                const maxValue1 = d3.max(stats1, d => d.value);
+
+                
 
 
-		///// POKEDEX ENTRY
+                const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name.toLowerCase() === pokename2.toLowerCase());
+
+                const stats2 = [
+                    { axis: "HP", value: +selectedPokemon2.hp },
+                    { axis: "Attack", value: +selectedPokemon2.attack },
+                    { axis: "Defense", value: +selectedPokemon2.defense },
+                    { axis: "Sp. Attack", value: +selectedPokemon2.sp_attack },
+                    { axis: "Sp. Defense", value: +selectedPokemon2.sp_defense },
+                    { axis: "Speed", value: +selectedPokemon2.speed }
+                ];
+
+                const maxValue2 = d3.max(stats2, d => d.value);
+
+                if (maxValue1 > maxValue2){
+                    return maxValue1;
+                } else{
+                    return maxValue2;
+                }
+
+            }
+        }
+
+		// Load Pokémon names and numbers from CSV and set up autocomplete
 		d3.csv("post-process-data/pokemon_dataset.csv").then(function (data) {
 			pokemonData = data;
 			const pokemonNames = data.map(d => d.name);
@@ -575,42 +640,35 @@
 					const value = this.value.toLowerCase();
 					suggestions.html("");
 
-					if (value) {
-						const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
-						filteredNames.forEach(name => {
-							suggestions.append("div")
-								.attr("class", "suggestion-item")
-								.text(name)
-								.on("click", function () {
-									input.property("value", name);
-									suggestions.html("");
-									loadPokemonImage(name, image);
-									generateSpiderChart(name, spiderChart);
-									displayPokemonInfo(name, header, description);
-								});
-						});
-					}
-				});
+				if (value) {
+					const filteredNames = pokemonNames.filter(name => name.toLowerCase().startsWith(value));
+					filteredNames.forEach(name => {
+						suggestions.append("div")
+							.attr("class", "suggestion-item")
+							.text(name)
+							.on("click", function () {
+								input.property("value", name);
+								suggestions.html("");
+								loadPokemonImage(name);
+								generateSpiderChart(name, findMaxValueSpiderChart(name, "Gyarados"));
+								displayPokemonInfo(name);
+								generateBarChart(name, "Gyarados");
 
-				////// DELETE BUTTON FUNCTIONALITY
-				deleteButton.on("click", function () {
-					input.property("value", "");
-					header.html("Enter a Pokémon name to see details");
-					image.attr("src", "post-process-data/pokemon_jpg/placeholder.png").style("display", "none");
-					description.html("Start by typing a Pokémon name above.");
-					spiderChart.selectAll("*").remove();
-				});
+							});
+					});
+				}
 			});
 		});
 
+		// Add the event listener for the delete button
+		// Add the event listener for the delete button
+		d3.select("#delete-button").on("click", function () {
 
-		////// OLD DELETE FUNCTION SAVE
-		// function resetPokemonDetails() {
-		// 	// RESET
-		// 	d3.select(".pokemon-input").property("value", "");
-		// 	d3.select(".pokemon-header").html("Enter a Pokémon name to see details");
-		// 	d3.select(".pokemon-image").style("display", "none");
-		// 	d3.select(".pokemon-description").html("Start by typing a Pokémon name above.");
+			// RESET
+			d3.select("#pokemon-input").property("value", "");
+			d3.select("#pokemon-header").html("Enter a Pokémon name to see details");
+			d3.select("#pokemon-image").style("display", "none");
+			d3.select("#pokemon-description").html("Start by typing a Pokémon name above.");
 
 		// 	// CLEAR SPIDER
 		// 	d3.select(".spider-chart").selectAll("*").remove();
@@ -635,7 +693,7 @@
 		}
 
 		/////// SPIDER CHART
-		function generateSpiderChart(name, chartElement) {
+		function generateSpiderChart(name, maxNum) {
 			const selectedPokemon = pokemonData.find(pokemon => pokemon.name.toLowerCase() === name.toLowerCase());
 
 			const stats = [
@@ -651,7 +709,7 @@
 
 			const width = 400;
 			const height = 400;
-			const maxValue = d3.max(stats, d => d.value);
+
 			const angleSlice = (Math.PI * 2) / stats.length;
 
 			const svg = d3.select(".spider-chart")
@@ -661,7 +719,7 @@
 
 			const radialLine = d3.lineRadial()
 				.angle((d, i) => i * angleSlice)
-				.radius(d => (d.value / maxValue) * (width / 2 - 40));
+				.radius(d => (d.value / maxNum) * (width / 2 - 40));
 
 			const radarData = stats.concat(stats[0]);
 
@@ -705,8 +763,8 @@
 					.attr("text-anchor", "middle");
 
 				// Add points to the edges
-				const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxValue) * (width / 2 - 40));
-				const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxValue) * (height / 2 - 40));
+				const pointX = (width / 2) + (Math.cos(angle - Math.PI / 2) * (d.value / maxNum) * (width / 2 - 40));
+				const pointY = (height / 2) + (Math.sin(angle - Math.PI / 2) * (d.value / maxNum) * (height / 2 - 40));
 
 				// Add interactivity (hover effects)
 				svg.append("circle")
