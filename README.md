@@ -1,1 +1,1 @@
-# pokemon-comparison
+# poke-compare
