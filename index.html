@@ -119,10 +119,13 @@
 		}
 
 		.spider-chart {
-			margin-top: 0px;
-			width: 368px;
-			height: 300px;
+			margin-top: -20px;
+			margin-left:-16px;
+			width: 400px;
+			height: 400px;
 			background-color: #ECE7E7;
+			transform: scale(0.9);
+
 		}
 
 		.tooltip {
@@ -346,7 +349,7 @@
 
 				<div class="entry-head">
 					<div id="pokemon-header2" class="pokemon-header">Pokemon</div>
-					<img id="delete-button2" class="delete-button" src="additional-assets/cancel.svg" alt="Cancel"
+					<img id="delete-button2" class="delete-button" src="additional-assets/cancel.png" alt="Cancel"
 						style="cursor: pointer; width: 30px; height: 30px;">
 				</div>
 
@@ -370,6 +373,7 @@
 
 		// pokedex entry is initially empty
 		let pokemonData = [];
+		let selected = {};
 
 		/////// SCATTER PLOT
 		async function generateScatter() {
@@ -548,12 +552,14 @@
 						displayPokemonInfo(d.name,
 							d3.select("#pokemon-header"),
 							d3.select("#pokemon-description"));
+						generateSpiderChart(d.name, spiderChart);
 					})
 					.on("contextmenu", (event, d) => {
 						loadPokemonImage(d.name, d3.select("#pokemon-image2"));
 						displayPokemonInfo(d.name,
 							d3.select("#pokemon-header2"),
 							d3.select("#pokemon-description2"));
+						generateSpiderChart(d.name, spiderChart2);
 					})
 					.transition()
 					.duration(800)
@@ -579,8 +585,6 @@
 
 		// scatter is always displayed on default
 		generateScatter();
-		generateBarChart("mew", "mewtwo");
-
 
 		/////// BAR CHART
 		function generateBarChart(pokemon1, pokemon2) {
@@ -604,8 +608,8 @@
 				const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name === pokemon1.toLowerCase());
 				const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name === pokemon2.toLowerCase());
 
-				console.log(selectedPokemon1);
-				console.log(selectedPokemon2);
+				// console.log(selectedPokemon1);
+				// console.log(selectedPokemon2);
 
 				if (!selectedPokemon1 || !selectedPokemon2) {
 					console.error("One or both Pokémon not found for bar chart.");
@@ -781,6 +785,7 @@
 				const description = entry.select(".pokemon-description");
 				const spiderChart = entry.select("#spider-chart1");
 
+
 				input.on("input", function () {
 					const value = this.value.toLowerCase();
 					suggestions.html("");
@@ -796,6 +801,7 @@
 									suggestions.html("");
 									loadPokemonImage(name, image);
 									generateSpiderChart(name, spiderChart);
+									generateBarChart(name, "mewtwo");
 									displayPokemonInfo(name, header, description);
 								});
 						});
@@ -845,6 +851,7 @@
 									suggestions.html("");
 									loadPokemonImage(name, image);
 									generateSpiderChart(name, spiderChart);
+									generateBarChart(name, "mewtwo");
 									displayPokemonInfo(name, header, description);
 								});
 						});
@@ -909,8 +916,8 @@
 			// Clear the chartElement to avoid stacking multiple charts
 			chartElement.selectAll("*").remove();
 
-			const width = 368;
-			const height = 300;
+			const width = 400;
+			const height = 400;
 			const maxValue = d3.max(stats, d => d.value);
 			const angleSlice = (Math.PI * 2) / stats.length;
 
