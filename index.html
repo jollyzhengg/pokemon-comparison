@@ -42,6 +42,7 @@
 			display: flex;
 			align-items: center;
 			gap: 10px;
+			margin-bottom: -15px;
 		}
 
 		.suggestions {
@@ -190,6 +191,11 @@
 			align-items: center;
 		}
 
+		.middle {
+			margin:0px;
+			margin-right: 15px;
+		}
+
 		.entry-head {
 			margin: 0px;
 			margin-bottom: -60px;
@@ -257,7 +263,33 @@
 			width: 180px;
 			text-transform: uppercase;
 		}
+
+		.bar {
+			border-radius: 5px;
+			margin-top: 30px;
+			margin-bottom: 30px;
+			
+		}
+
+		.description {
+			background-color: #D53141;
+			color: #ECE7E7;
+			padding: 10px;
+			padding-left: 20px;
+			padding-right: 20px;
+			border-radius: 10px;
+
+		}
+
+		.bar-section {
+			display: flex;
+			justify-content:center;
+			align-items:center;
+			margin:0px;
+		}
 	</style>
+
+
 </head>
 
 <body>
@@ -330,12 +362,15 @@
 				<div class="tooltip"></div>
 
 			</div>
-			<svg id="bar-chart"></svg>
+			<div class="bar-section">
+				<svg id="bar-chart" class="bar"></svg>
+			</div>
 
 			<div class="description">
 				<p>
-					Left click to change the left pokemon box. Right click to change the right pokemon box.
-				</p>
+					On the scatter plot, left click to change the Pokemon on the left. Right click to change the Pokemon on the
+					right.
+					To look up a specific pokemon, use the search bar.</p>
 			</div>
 
 		</div>
@@ -522,16 +557,16 @@
 				const circles = chartArea.selectAll("circle")
 					.data(dat, d => d.name); // Key data by unique identifier
 
-				// ENTER phase
 				const circlesEnter = circles.enter()
 					.append("circle")
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
 					.attr("fill", d => typeColors[d.type1.toLowerCase()] || "gray")
 					.attr("opacity", 0.6)
+					.attr("stroke", "none")
+					.attr("stroke-width", 2)
 					.attr("r", 0);
 
-				// MERGE phase
 				circlesEnter.merge(circles)
 					.on("mouseover", function (event, d) {
 						d3.select(this)
@@ -547,26 +582,25 @@
 							.style("top", `${event.pageY + 10}px`)
 							.style("left", `${event.pageX + 10}px`);
 					})
-					.on("mouseout", function () {
-						d3.select(this)
-							.transition().duration(200)
-							.attr("opacity", 0.6)
-							.attr("r", 4);
+					.on("mouseout", function (event, d) {
+						if (selected.pokemon1 !== d.name && selected.pokemon2 !== d.name) {
+							d3.select(this)
+								.transition().duration(200)
+								.attr("r", 4)
+								.attr("opacity", 0.6);
+						}
 						tooltip.style("visibility", "hidden");
 					})
 					// LEFT CLICK FUNCTIONALITY (Select Pokemon 1)
 					.on("click", function (event, d) {
-						event.preventDefault();
-
-						// Store selected Pokémon
+						event.preventDefault(); // prevent left click thingy
 						selected.pokemon1 = d.name;
 
-						// Update visuals
+						// UPDATES
 						loadPokemonImage(d.name, d3.select("#pokemon-image"));
 						displayPokemonInfo(d.name, d3.select("#pokemon-header"), d3.select("#pokemon-description"));
 						generateSpiderChart(d.name, d3.select("#spider-chart1"));
 
-						// If both Pokémon are selected, update bar chart
 						if (selected.pokemon1 && selected.pokemon2) {
 							generateBarChart(selected.pokemon1, selected.pokemon2);
 						}
@@ -574,7 +608,6 @@
 					// RIGHT CLICK FUNCTIONALITY (Select Pokemon 2)
 					.on("contextmenu", function (event, d) {
 						event.preventDefault();
-
 						selected.pokemon2 = d.name;
 
 						loadPokemonImage(d.name, d3.select("#pokemon-image2"));
@@ -591,7 +624,7 @@
 					.attr("cy", d => yScale(d[yValue]))
 					.attr("r", d => (selected.pokemon1 === d.name || selected.pokemon2 === d.name) ? 8 : 4); // Maintain selected radius
 
-				// EXIT phase
+
 				circles.exit()
 					.transition()
 					.duration(800)
@@ -599,7 +632,6 @@
 					.remove();
 			}
 
-			// Call the function
 			createLegend();
 			updateScatter();
 			xSelect.on("change", updateScatter);
@@ -664,7 +696,7 @@
 					.attr("text-anchor", "middle")
 					.style("font-size", "18px")
 					.style("font-weight", "bold")
-					.text("Deeper Look into Stats");
+					.text("Pokemon Stats Side-by-Side");
 
 				const xScale = d3.scaleLinear()
 					.domain([0, d3.max(pokemonStatsData, d => Math.max(d.pokemon1.value, d.pokemon2.value))])
