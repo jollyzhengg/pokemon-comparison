@@ -484,7 +484,6 @@
 					.attr("height", legendItemSize)
 					.attr("fill", d => d[1]);
 
-
 				legendItems.append("text")
 					.attr("x", legendItemSize + spacing)
 					.attr("y", legendItemSize / 2)
@@ -557,6 +556,7 @@
 				const circles = chartArea.selectAll("circle")
 					.data(dat, d => d.name); // Key data by unique identifier
 
+				// ANIMATIONS
 				const circlesEnter = circles.enter()
 					.append("circle")
 					.attr("cx", d => xScale(d[xValue]))
@@ -587,42 +587,45 @@
 							d3.select(this)
 								.transition().duration(200)
 								.attr("r", 4)
-								.attr("opacity", 0.6);
+								.attr("opacity", 0.6)
+								.attr("stroke", "none");
 						}
 						tooltip.style("visibility", "hidden");
 					})
 					// LEFT CLICK FUNCTIONALITY (Select Pokemon 1)
 					.on("click", function (event, d) {
 						event.preventDefault(); // prevent left click thingy
-						selected.pokemon1 = d.name;
-
-						// UPDATES
-						loadPokemonImage(d.name, d3.select("#pokemon-image"));
-						displayPokemonInfo(d.name, d3.select("#pokemon-header"), d3.select("#pokemon-description"));
-						generateSpiderChart(d.name, d3.select("#spider-chart1"));
-
-						if (selected.pokemon1 && selected.pokemon2) {
-							generateBarChart(selected.pokemon1, selected.pokemon2);
+						if (selected.pokemon1 === d.name) {
+							selected.pokemon1 = null;
+						} else {
+							// If two are already selected, remove the oldest selection
+							if (selected.pokemon1 && selected.pokemon2) {
+								selected.pokemon1 = selected.pokemon2;
+							}
+							selected.pokemon1 = d.name;
 						}
+
+						updateSelectedUI();
 					})
 					// RIGHT CLICK FUNCTIONALITY (Select Pokemon 2)
 					.on("contextmenu", function (event, d) {
 						event.preventDefault();
-						selected.pokemon2 = d.name;
-
-						loadPokemonImage(d.name, d3.select("#pokemon-image2"));
-						displayPokemonInfo(d.name, d3.select("#pokemon-header2"), d3.select("#pokemon-description2"));
-						generateSpiderChart(d.name, d3.select("#spider-chart2"));
-
-						if (selected.pokemon1 && selected.pokemon2) {
-							generateBarChart(selected.pokemon1, selected.pokemon2);
+						if (selected.pokemon2 === d.name) {
+							selected.pokemon2 = null;
+						} else {
+							if (selected.pokemon1 && selected.pokemon2) {
+								selected.pokemon2 = selected.pokemon1;
+							}
+							selected.pokemon2 = d.name;
 						}
+
+						updateSelectedUI();
 					})
 					.transition()
 					.duration(800)
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
-					.attr("r", d => (selected.pokemon1 === d.name || selected.pokemon2 === d.name) ? 8 : 4); // Maintain selected radius
+					.attr("r", d => (selected.pokemon1 === d.name || selected.pokemon2 === d.name) ? 6 : 4); // Maintain selected radius
 
 
 				circles.exit()
@@ -630,6 +633,35 @@
 					.duration(800)
 					.attr("r", 0)
 					.remove();
+			}
+
+			// HANDLING SELECTION ON SCATTER PLOT
+			function updateSelectedUI() {
+				chartArea.selectAll("circle")
+					.transition().duration(200)
+					.attr("r", d => (d.name === selected.pokemon1 || d.name === selected.pokemon2) ? 6 : 4)
+					.attr("opacity", d => (d.name === selected.pokemon1 || d.name === selected.pokemon2) ? 1.0 : 0.6)
+					.attr("stroke", d => (d.name === selected.pokemon1 || d.name === selected.pokemon2) ? "black" : "none")
+					.attr("stroke-width", d => (d.name === selected.pokemon1 || d.name === selected.pokemon2) ? 2 : 0);
+
+				// pokemon1
+				if (selected.pokemon1) {
+					loadPokemonImage(selected.pokemon1, d3.select("#pokemon-image"));
+					displayPokemonInfo(selected.pokemon1, d3.select("#pokemon-header"), d3.select("#pokemon-description"));
+					generateSpiderChart(selected.pokemon1, d3.select("#spider-chart1"));
+				}
+
+				// pokemon1
+				if (selected.pokemon2) {
+					loadPokemonImage(selected.pokemon2, d3.select("#pokemon-image2"));
+					displayPokemonInfo(selected.pokemon2, d3.select("#pokemon-header2"), d3.select("#pokemon-description2"));
+					generateSpiderChart(selected.pokemon2, d3.select("#spider-chart2"));
+				}
+
+				//  BAR CHART CALL
+				if (selected.pokemon1 && selected.pokemon2) {
+					generateBarChart(selected.pokemon1, selected.pokemon2);
+				}
 			}
 
 			createLegend();
