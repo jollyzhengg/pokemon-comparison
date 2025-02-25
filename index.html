@@ -120,7 +120,7 @@
 
 		.spider-chart {
 			margin-top: -20px;
-			margin-left:-16px;
+			margin-left: -16px;
 			width: 400px;
 			height: 400px;
 			background-color: #ECE7E7;
@@ -373,7 +373,7 @@
 
 		// pokedex entry is initially empty
 		let pokemonData = [];
-		let selected = {};
+		let selected = { pokemon1: null, pokemon2: null };
 
 		/////// SCATTER PLOT
 		async function generateScatter() {
@@ -512,9 +512,9 @@
 					.text(yValue.toUpperCase());
 
 				const circles = chartArea.selectAll("circle")
-					.data(dat, d => d.name) // key data by unique identifier
+					.data(dat, d => d.name); // Key data by unique identifier
 
-				// ANIMATION
+				// ENTER phase
 				const circlesEnter = circles.enter()
 					.append("circle")
 					.attr("cx", d => xScale(d[xValue]))
@@ -523,6 +523,7 @@
 					.attr("opacity", 0.6)
 					.attr("r", 0);
 
+				// MERGE phase
 				circlesEnter.merge(circles)
 					.on("mouseover", function (event, d) {
 						d3.select(this)
@@ -545,27 +546,42 @@
 							.attr("r", 4);
 						tooltip.style("visibility", "hidden");
 					})
-					// RIGHT AND LEFT CLICK FUNCTIONALITY
-					.on("click", (event, d) => {
+					// LEFT CLICK FUNCTIONALITY (Select Pokemon 1)
+					.on("click", function (event, d) {
 						event.preventDefault();
+
+						// Store selected Pokémon
+						selected.pokemon1 = d.name;
+
+						// Update visuals
 						loadPokemonImage(d.name, d3.select("#pokemon-image"));
-						displayPokemonInfo(d.name,
-							d3.select("#pokemon-header"),
-							d3.select("#pokemon-description"));
-						generateSpiderChart(d.name, spiderChart);
+						displayPokemonInfo(d.name, d3.select("#pokemon-header"), d3.select("#pokemon-description"));
+						generateSpiderChart(d.name, d3.select("#spider-chart1"));
+
+						// If both Pokémon are selected, update bar chart
+						if (selected.pokemon1 && selected.pokemon2) {
+							generateBarChart(selected.pokemon1, selected.pokemon2);
+						}
 					})
-					.on("contextmenu", (event, d) => {
+					// RIGHT CLICK FUNCTIONALITY (Select Pokemon 2)
+					.on("contextmenu", function (event, d) {
+						event.preventDefault();
+
+						selected.pokemon2 = d.name;
+
 						loadPokemonImage(d.name, d3.select("#pokemon-image2"));
-						displayPokemonInfo(d.name,
-							d3.select("#pokemon-header2"),
-							d3.select("#pokemon-description2"));
-						generateSpiderChart(d.name, spiderChart2);
+						displayPokemonInfo(d.name, d3.select("#pokemon-header2"), d3.select("#pokemon-description2"));
+						generateSpiderChart(d.name, d3.select("#spider-chart2"));
+
+						if (selected.pokemon1 && selected.pokemon2) {
+							generateBarChart(selected.pokemon1, selected.pokemon2);
+						}
 					})
 					.transition()
 					.duration(800)
 					.attr("cx", d => xScale(d[xValue]))
 					.attr("cy", d => yScale(d[yValue]))
-					.attr("r", 4);
+					.attr("r", d => (selected.pokemon1 === d.name || selected.pokemon2 === d.name) ? 8 : 4); // Maintain selected radius
 
 				// EXIT phase
 				circles.exit()
@@ -575,6 +591,7 @@
 					.remove();
 			}
 
+			// Call the function
 			createLegend();
 			updateScatter();
 			xSelect.on("change", updateScatter);
