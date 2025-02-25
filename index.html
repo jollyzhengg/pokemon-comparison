@@ -331,6 +331,13 @@
 
 			</div>
 			<svg id="bar-chart"></svg>
+
+			<div class="description">
+				<p>
+					Left click to change the left pokemon box. Right click to change the right pokemon box.
+				</p>
+			</div>
+
 		</div>
 
 
@@ -357,13 +364,14 @@
 				<div id="pokemon-container2" class="pokemon-container">
 					<img id="pokemon-image2" class="pokemon-image" src="post-process-data/pokemon_jpg/placeholder.png"
 						alt="Pokémon Image">
-					<div id="pokemon-description2" class="pokemon-description">Start by typing a Pokémon name above.</div>
+					<div id="pokemon-description2" class="pokemon-description">Start by selecting a Pokemon</div>
 				</div>
 
 			</div>
 
 			<svg id="spider-chart2" class="spider-chart"></svg>
 		</div>
+
 	</div>
 
 
@@ -621,7 +629,6 @@
 					speed: +d.speed
 				}));
 
-				// Find the selected Pokémon based on their names (case-insensitive)
 				const selectedPokemon1 = pokemonData.find(pokemon => pokemon.name === pokemon1.toLowerCase());
 				const selectedPokemon2 = pokemonData.find(pokemon => pokemon.name === pokemon2.toLowerCase());
 
@@ -633,30 +640,24 @@
 					return;
 				}
 
-				// Define the stats categories to display
 				const stats = ["hp", "attack", "defense", "sp_attack", "sp_defense", "speed"];
 
-				// Create an array with the stats for both Pokémon
 				const pokemonStatsData = stats.map(stat => ({
 					category: stat.toUpperCase(),
 					pokemon1: { name: pokemon1, value: selectedPokemon1[stat] },
 					pokemon2: { name: pokemon2, value: selectedPokemon2[stat] }
 				}));
 
-				// Remove previous chart if exists
 				d3.select("#bar-chart").selectAll("*").remove();
 
-				// Set dimensions for the chart
 				const width = 600;
 				const height = 320;
 				const margin = { top: 50, right: 150, bottom: 40, left: 100 };
 
-				// Create SVG container for the bar chart
 				const svg = d3.select("#bar-chart")
 					.attr("width", width)
 					.attr("height", height);
 
-				// Add chart title
 				svg.append("text")
 					.attr("x", width / 2)
 					.attr("y", margin.top / 2)
@@ -665,7 +666,6 @@
 					.style("font-weight", "bold")
 					.text("Deeper Look into Stats");
 
-				// Set up scales for the chart
 				const xScale = d3.scaleLinear()
 					.domain([0, d3.max(pokemonStatsData, d => Math.max(d.pokemon1.value, d.pokemon2.value))])
 					.range([0, width - margin.left - margin.right]);
@@ -688,7 +688,6 @@
 					.style("pointer-events", "none")
 					.style("opacity", 0);
 
-				// Draw bars for Pokémon 1
 				g.selectAll(".bar1")
 					.data(pokemonStatsData)
 					.enter().append("rect")
@@ -740,7 +739,6 @@
 					.duration(800)
 					.attr("width", d => xScale(d.pokemon2.value));
 
-				// Add axes
 				g.append("g")
 					.attr("transform", `translate(0, ${height - margin.top - margin.bottom})`)
 					.call(d3.axisBottom(xScale));
@@ -748,7 +746,6 @@
 				g.append("g")
 					.call(d3.axisLeft(yScale));
 
-				// Add legends
 				const legend = svg.append("g")
 					.attr("transform", `translate(${width - margin.right + 20}, ${margin.top})`);
 
@@ -781,8 +778,6 @@
 					.attr("alignment-baseline", "middle");
 			});
 		}
-
-
 
 		///// POKEDEX ENTRY
 		d3.csv("post-process-data/pokemon_dataset.csv").then(function (data) {
